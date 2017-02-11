@@ -303,8 +303,21 @@ public:
 };
 
 // CONSTANTS //
+int board[10][10] = {
+        {1,1,1,0,0,0,0,0,0,0},
+        {1,1,1,1,1,1,0,0,0,0},
+        {1,1,1,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,1,1,1},
+        {0,0,0,0,0,1,1,0,1,1},
+        {0,0,0,0,0,0,1,1,1,0},
+        {0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0}
+    };
+
 float z_ordinate = 0.0f, y_ordinate = 0.0f, x_ordinate = 0.0f;
-int board[10][10], flag = 0;
+int flag = 0;
 VAO *axes, *cell, *triangle, *rectangle;
 float camera_rotation_angle = 45.0f;
 GraphicalObject Block, Board[10][10];
@@ -464,36 +477,74 @@ void drawAxes( )
         0,1,1,
         0,1,1
     };
-    axes = create3DObject(GL_TRIANGLES, 9, vertex_buffer_data, color_buffer_data, GL_LINE);
+    axes = create3DObject (GL_TRIANGLES, 9, vertex_buffer_data, color_buffer_data, GL_LINE);
 }
 
-void getBoard( )
+int stageStarting ( )
 {
-    for ( int i = 0; i < 10; i++ )
-        for( int j = 0; j < 10; j++)
-            board[ i ][ j ] = rand( )%2;
-    }
+    for( int i = 0; i < 10; i++)
+        for (int j = 0; j < 10; j++)
+            if(Board[ i ][ j ].y_ordinate < -0.1f && board[ i ][ j ] == 1)
+                    return 1;
 
+    if(Block.y_ordinate > 0)
+            return 1;
 
-    void drawBoard( )
+    return 0;
+}
+
+void moveBlocksBoards ( )
+{
+    for( int i = 0; i < 10; i++)
+        for(int j = 0; j < 10; j++ )
+            if(Board[ i ][ j ].y_ordinate < -0.1f && board[ i ][ j ] == 1)
+                Board[ i ][ j ].y_ordinate += 0.1f;
+    
+    if(Block.y_ordinate > 0)
     {
-        for(int i = 0; i < 10; i++ ){
-            for(int j = 0; j < 10; j++ ){
-                Board[ i ][ j ].translator(Board[ i ][ j ].x_ordinate,
+         Block.y_ordinate -= 0.1f; 
+         Block.translator (Block.x_ordinate, Block.y_ordinate, Block.z_ordinate);
+    }
+}
+
+int checkBlock ( )
+{
+    int j = Block.x_ordinate/0.3f ;
+    int i = Block.z_ordinate/0.3f ;
+    
+    if ( board[ i ][ j ] == 1 && flag == 0)
+        return 1;
+    
+    if ( board[ i ][ j ] == 1 && board[ i ][ j+1 ] == 1 && flag == 1)
+        return 1;
+    
+    if ( board[ i ][ j ] == 1 && board[ i+1 ][ j ] == 1 && flag == 2)
+        return 1;
+
+    return 0;
+}
+
+void drawBoard ( )
+{
+    for(int i = 0; i < 10; i++ ){
+        for(int j = 0; j < 10; j++ ){
+            if(board[ i ][ j ] == 1){
+                Board[ i ][ j ].translator (Board[ i ][ j ].x_ordinate,
                                                        Board[ i ][ j ].y_ordinate,
                                                        Board[ i ][ j ].z_ordinate);   
-                Board[ i ][ j ].render( );
+                Board[ i ][ j ].render ( );
             }
         }
     }
+}
 
 // Render the scene with openGL 
 // Edit this function according to your assignment 
 void draw (GLFWwindow* window, float x, float y, float w, float h)
 {
     int fbwidth, fbheight;
-    glfwGetFramebufferSize(window, &fbwidth, &fbheight);
-    glViewport((int)(x*fbwidth), (int)(y*fbheight), (int)(w*fbwidth), (int)(h*fbheight));
+    glfwGetFramebufferSize (window, &fbwidth, &fbheight);
+    glViewport ((int)(x*fbwidth), (int)(y*fbheight), (int)(w*fbwidth), (int)(h*fbheight));
 
 
     // use the loaded shader program
@@ -540,15 +591,19 @@ void draw (GLFWwindow* window, float x, float y, float w, float h)
     Pop matrix to undo transformations till last push matrix instead of recomputing model matrix
     glPopMatrix ();
     */
+    if( stageStarting ( ) )
+    {
+        moveBlocksBoards ( );
+    }
+    drawBoard ( );
 
-    drawBoard( );
-
-    Matrices.model = glm::mat4(1.0f);
+    Matrices.model = glm::mat4 (1.0f);
     MVP = VP * Matrices.model;
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    draw3DObject(axes);
+    glUniformMatrix4fv (Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject (axes);
 
-    Block.render( );
+    if( checkBlock ( ) )
+        Block.render ( );
 }
 
 // Initialise glfw window, I/O callbacks and the renderer to use 
@@ -592,19 +647,20 @@ void initGL (GLFWwindow* window, int width, int height)
     // Objects should be created before any other gl function and shaders 
     // Create the models
     drawAxes( );
-    getBoard( );
 
-    float x_ordinate = 0.0f, y_ordinate = 0.0f, z_ordinate = 0.0f;
+    float x_ordinate = 0.0f , z_ordinate = 0.0f;
     for(int i = 0; i < 10; i++ ){
          x_ordinate = 0.0f;
         for(int j = 0; j < 10;j++){
             if((i + j) % 2 == 0){
+                y_ordinate = rand( )%2 - 5.0f;
                 VAO *cell = createCell(0.3f, 0.3f, -0.1f, 1, 0, 0);
                 GraphicalObject temp = GraphicalObject(x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f, 'r');
                 temp.object = cell;
                 Board[ i ][ j ] = temp;
             }
             else{
+                y_ordinate = rand( )%2 - 5.0f;
                 VAO *cell = createCell(0.3f, 0.3f, -0.1f, 0, 1, 0);
                 GraphicalObject temp = GraphicalObject(x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'g');
                 temp.object = cell;
@@ -614,8 +670,10 @@ void initGL (GLFWwindow* window, int width, int height)
         }
         z_ordinate += 0.3f;
     }
-    
-    GraphicalObject temp = GraphicalObject( 0, 0, 0, 0.6f, 0.3f);
+    x_ordinate = 0;
+    y_ordinate = rand( )%2 + 5.0f;
+    z_ordinate = 0;
+    GraphicalObject temp = GraphicalObject( x_ordinate, y_ordinate, z_ordinate, 0.6f, 0.3f);
     temp.object  = createCell(0.3f, 0.3f, 0.6f, 1, 1, 0);
     Block = temp;
 
