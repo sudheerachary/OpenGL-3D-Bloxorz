@@ -262,27 +262,33 @@ public:
     float x_ordinate;
     float y_ordinate;
     float z_ordinate;
-    float angle;
+    float height;
+    float length;
     char color;
     glm::mat4 translate_matrix;
     glm::mat4 rotate_matrix;
+
 public:
-    GraphicalObject(float X=0, float Y=0, float Z=0, float rotation=0, char colour='D')
+    GraphicalObject(float X=0, float Y=0, float Z=0, float H=0, float L=0, char colour='D')
     {
       x_ordinate = X;
       y_ordinate = Y;
       z_ordinate = Z;
-      angle = rotation;
+      height = H;
+      length = L;
       color = colour;
   }
+ 
   void rotator(float rotation=0, glm::vec3 rotating_vector=glm::vec3(0,0,1))
   {
       rotate_matrix = glm::rotate((float)(rotation*M_PI/180.0f), rotating_vector);
   }
+ 
   void translator(float x = 0, float y = 0, float z = 0)
   {
         translate_matrix = glm::translate(glm::vec3(x, y, z));
   }
+ 
   void render( )
   {
       glm::mat4 VP = Matrices.projectionO * Matrices.view;
@@ -293,6 +299,7 @@ public:
       glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
       draw3DObject(object);
   }
+
 };
 
 // CONSTANTS //
@@ -317,58 +324,58 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
          case GLFW_KEY_UP:
             if(flag == 0){
                 flag = 1;
-                Block.x_ordinate -= 0.6f;
+                Block.x_ordinate -= Block.height;
                 Block.rotator(90.0f, glm::vec3(0, 0, 1));
             }
             else if(flag == 1){
                 flag = 0;
-                Block.x_ordinate -= 0.3f;
+                Block.x_ordinate -= Block.length;
                 Block.translator(Block.x_ordinate, 0, Block.z_ordinate);
                 Block.rotator( );
             }
             else{
                 flag = 2;
-                Block.x_ordinate -= 0.3f;
+                Block.x_ordinate -= Block.length;
                 Block.rotator(-90.0f, glm::vec3(1, 0, 0));
-                Block.translator(Block.x_ordinate, 0, Block.z_ordinate + 0.6f);
+                Block.translator(Block.x_ordinate, 0, Block.z_ordinate + Block.height);
             }
             break;
          case GLFW_KEY_DOWN:
                 if(flag == 0){
                     flag = 1;
-                    Block.x_ordinate += 0.3f;
-                    Block.translator(Block.x_ordinate + 0.6f, 0, Block.z_ordinate);
+                    Block.x_ordinate += Block.length;
+                    Block.translator(Block.x_ordinate + Block.height, 0, Block.z_ordinate);
                     Block.rotator(90.0f, glm::vec3(0, 0, 1));
                 }
                 else if(flag == 1){
                     flag = 0;
-                    Block.x_ordinate += 0.6f;
+                    Block.x_ordinate += Block.height;
                     Block.translator(Block.x_ordinate, 0, Block.z_ordinate);
                     Block.rotator( );
                 }
                 else{
                     flag = 2;
-                    Block.x_ordinate += 0.3f;
-                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate + 0.6f);
+                    Block.x_ordinate += Block.length;
+                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate + Block.height);
                     Block.rotator(-90.0f, glm::vec3(1, 0, 0));
                 }
                 break;
          case GLFW_KEY_LEFT:
                 if(flag == 0){
                     flag = 2;
-                    Block.z_ordinate += 0.3f;
-                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate + 0.6f);
+                    Block.z_ordinate += Block.length;
+                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate + Block.height);
                     Block.rotator(-90.0f, glm::vec3(1, 0, 0));
                 }
                 else if(flag == 1){
                     flag = 1;
-                    Block.z_ordinate += 0.3f;
-                    Block.translator(Block.x_ordinate + 0.6f, 0, Block.z_ordinate);
+                    Block.z_ordinate += Block.length;
+                    Block.translator(Block.x_ordinate + Block.height, 0, Block.z_ordinate);
                     Block.rotator(90.0f, glm::vec3(0, 0, 1));
                 }
                 else{
                     flag = 0;
-                    Block.z_ordinate += 0.6f;
+                    Block.z_ordinate += Block.height;
                     Block.translator(Block.x_ordinate, 0, Block.z_ordinate);
                     Block.rotator( );
                 }
@@ -376,19 +383,19 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
          case GLFW_KEY_RIGHT:
                 if(flag == 0){
                     flag = 2;
-                    Block.z_ordinate -= 0.6f;
-                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate + 0.6f);
+                    Block.z_ordinate -= Block.height;
+                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate + Block.height);
                     Block.rotator(-90.0f, glm::vec3(1, 0, 0));
                 }
                 else if(flag == 1){
                     flag = 1;
-                    Block.z_ordinate -= 0.3f;
-                    Block.translator(Block.x_ordinate + 0.6f, 0, Block.z_ordinate);
+                    Block.z_ordinate -= Block.length;
+                    Block.translator(Block.x_ordinate + Block.height, 0, Block.z_ordinate);
                     Block.rotator(90.0f, glm::vec3(0, 0, 1));
                 }
                 else{
                     flag = 0;
-                    Block.z_ordinate -= 0.3f;
+                    Block.z_ordinate -= Block.length;
                     Block.translator(Block.x_ordinate, 0, Block.z_ordinate);
                     Block.rotator( );
                 }
@@ -480,8 +487,8 @@ void getBoard( )
         }
     }
 
-/* Render the scene with openGL */
-/* Edit this function according to your assignment */
+// Render the scene with openGL 
+// Edit this function according to your assignment 
 void draw (GLFWwindow* window, float x, float y, float w, float h)
 {
     int fbwidth, fbheight;
@@ -542,19 +549,11 @@ void draw (GLFWwindow* window, float x, float y, float w, float h)
     draw3DObject(axes);
 
     Block.render( );
-    
-    // Increment angles
-    float  increments = 1;
-
-    // camera_rotation_angle++; // Simulating camera rotation
-    //  triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
-    //  rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
 }
 
-/* Initialise glfw window, I/O callbacks and the renderer to use */
-/* Nothing to Edit here */
+// Initialise glfw window, I/O callbacks and the renderer to use 
 GLFWwindow* initGLFW (int width, int height){
-    GLFWwindow* window; // window desciptor/handle
+    GLFWwindow* window;        // window desciptor/handle
 
     glfwSetErrorCallback(error_callback);
     if (!glfwInit()) {
@@ -586,28 +585,28 @@ GLFWwindow* initGLFW (int width, int height){
     return window;
 }
 
-/* Initialize the OpenGL rendering properties */
-/* Add all the models to be created here */
+// Initialize the OpenGL rendering properties 
+// Add all the models to be created here 
 void initGL (GLFWwindow* window, int width, int height)
 {
-    /* Objects should be created before any other gl function and shaders */
+    // Objects should be created before any other gl function and shaders 
     // Create the models
-    drawAxes();
-    getBoard();
+    drawAxes( );
+    getBoard( );
 
     float x_ordinate = 0.0f, y_ordinate = 0.0f, z_ordinate = 0.0f;
     for(int i = 0; i < 10; i++ ){
          x_ordinate = 0.0f;
         for(int j = 0; j < 10;j++){
             if((i + j) % 2 == 0){
-                VAO *cell = createCell(0.3, 0.3, -0.1, 1, 0, 0);
-                GraphicalObject temp = GraphicalObject(x_ordinate, y_ordinate, z_ordinate, 0, 'r');
+                VAO *cell = createCell(0.3f, 0.3f, -0.1f, 1, 0, 0);
+                GraphicalObject temp = GraphicalObject(x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f, 'r');
                 temp.object = cell;
                 Board[ i ][ j ] = temp;
             }
             else{
-                VAO *cell = createCell(0.3, 0.3, -0.1, 0, 1, 0);
-                GraphicalObject temp = GraphicalObject(x_ordinate, y_ordinate, z_ordinate, 0, 'g');
+                VAO *cell = createCell(0.3f, 0.3f, -0.1f, 0, 1, 0);
+                GraphicalObject temp = GraphicalObject(x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'g');
                 temp.object = cell;
                 Board[ i ][ j ] = temp;
             }
@@ -616,8 +615,8 @@ void initGL (GLFWwindow* window, int width, int height)
         z_ordinate += 0.3f;
     }
     
-    GraphicalObject temp = GraphicalObject( );
-    temp.object  = createCell(0.3, 0.3, 0.6, 1, 1, 0);
+    GraphicalObject temp = GraphicalObject( 0, 0, 0, 0.6f, 0.3f);
+    temp.object  = createCell(0.3f, 0.3f, 0.6f, 1, 1, 0);
     Block = temp;
 
     // Create and compile our GLSL program from the shaders
@@ -634,20 +633,12 @@ void initGL (GLFWwindow* window, int width, int height)
 
     glEnable (GL_DEPTH_TEST);
     glDepthFunc (GL_LEQUAL);
-
-    // cout << "VENDOR: " << glGetString(GL_VENDOR) << endl;
-    // cout << "RENDERER: " << glGetString(GL_RENDERER) << endl;
-    // cout << "VERSION: " << glGetString(GL_VERSION) << endl;
-    // cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 }
 
 int main (int argc, char** argv)
 {
     int width = 1000;
     int height = 1000;
-    proj_type = 0;
-    tri_pos = glm::vec3(0, 0, 0);
-    rect_pos = glm::vec3(0, 0, 0);
 
     GLFWwindow* window = initGLFW(width, height);
     initGLEW();
