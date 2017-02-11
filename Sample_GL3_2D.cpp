@@ -212,84 +212,6 @@ void draw3DObject (struct VAO* vao)
     glDrawArrays(vao->PrimitiveMode, 0, vao->NumVertices); // Starting from vertex 0; 3 vertices total -> 1 triangle
 }
 
-/**************************
- * Customizable functions *
- **************************/
-int move_up = 0, move_down = 0, move_left = 0, move_right = 0;
-/* Executed when a regular key is pressed/released/held-down */
-/* Prefered for Keyboard events */
-void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    // Function is called first on GLFW_PRESS.
-
-    if (action == GLFW_RELEASE) {
-        switch (key) {
-           case GLFW_KEY_UP:
-           move_up = 0;
-           break;
-           case GLFW_KEY_DOWN:
-           move_down = 0;
-           break;
-           case GLFW_KEY_LEFT:
-           move_left = 0;
-           break;
-           case GLFW_KEY_RIGHT:
-           move_right = 0;
-           break;
-           default:
-           break;
-       }
-   }
-   else if (action == GLFW_PRESS) {
-    switch (key) {
-       case GLFW_KEY_UP:
-       move_up = 1;
-       break;
-       case GLFW_KEY_DOWN:
-       move_down = 1;
-       break;
-       case GLFW_KEY_LEFT:
-       move_left = 1;
-       break;
-       case GLFW_KEY_RIGHT:
-       move_right = 1;
-       break;
-       case GLFW_KEY_ESCAPE:
-       quit(window);
-       break;
-       default:
-       break;
-   }
-}
-}
-
-/* Executed for character input (like in text boxes) */
-void keyboardChar (GLFWwindow* window, unsigned int key)
-{
-    switch (key) {
-        case 'Q':
-        case 'q':
-        quit(window);
-        break;
-        default:
-        break;
-    }
-}
-
-/* Executed when a mouse button is pressed/released */
-void mouseButton (GLFWwindow* window, int button, int action, int mods)
-{
-    switch (button) {
-        case GLFW_MOUSE_BUTTON_LEFT:
-        break;
-        case GLFW_MOUSE_BUTTON_RIGHT:
-        break;
-        default:
-        break;
-    }
-}
-
-
 /* Executed when window is resized to 'width' and 'height' */
 /* Modify the bounds of the screen here in glm::ortho or Field of View in glm::Perspective */
 void reshapeWindow (GLFWwindow* window, int width, int height)
@@ -321,10 +243,11 @@ VAO *createCell(float l, float b, float h, float r, float g, float bl)
         b, 0, l, b, 0, 0, b, h, 0, b, h, 0, b, h, l, b, 0, l,            //5
         0, h, l, b, h, l, b, h, 0, b, h, 0, 0, h, 0, 0, h, l         //6
     };
-    static const GLfloat color_buffer_data [ ] = {
+    GLfloat color_buffer_data [ ] = {
         r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
         r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
         r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
+        
         r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
         r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
         r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, 
@@ -356,13 +279,16 @@ public:
   {
       rotate_matrix = glm::rotate((float)(rotation*M_PI/180.0f), rotating_vector);
   }
+  void translator(float x = 0, float y = 0, float z = 0)
+  {
+        translate_matrix = glm::translate(glm::vec3(x, y, z));
+  }
   void render( )
   {
-      glm::mat4 VP = (proj_type?Matrices.projectionP:Matrices.projectionO) * Matrices.view;
+      glm::mat4 VP = Matrices.projectionO * Matrices.view;
       glm::mat4 MVP;
       Matrices.model = glm::mat4(1.0f);
-      translate_matrix = glm::translate(glm::vec3(x_ordinate, y_ordinate, z_ordinate));
-      Matrices.model *= translate_matrix*rotate_matrix;
+      Matrices.model = translate_matrix*rotate_matrix;
       MVP = VP * Matrices.model;
       glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
       draw3DObject(object);
@@ -370,10 +296,137 @@ public:
 };
 
 // CONSTANTS //
-int board[10][10];
+float z_ordinate = 0.0f, y_ordinate = 0.0f, x_ordinate = 0.0f;
+int board[10][10], flag = 0;
 VAO *axes, *cell, *triangle, *rectangle;
 float camera_rotation_angle = 45.0f;
-GraphicalObject Board[10][10];
+GraphicalObject Block, Board[10][10];
+
+void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    // Function is called first on GLFW_PRESS.
+
+    if (action == GLFW_RELEASE) {
+        switch (key) {
+           default:
+                break;
+       }
+   }
+   else if (action == GLFW_PRESS) {
+    switch (key) {
+         case GLFW_KEY_UP:
+            if(flag == 0){
+                flag = 1;
+                Block.x_ordinate -= 0.6f;
+                Block.rotator(90.0f, glm::vec3(0, 0, 1));
+            }
+            else if(flag == 1){
+                flag = 0;
+                Block.x_ordinate -= 0.3f;
+                Block.translator(Block.x_ordinate, 0, Block.z_ordinate);
+                Block.rotator( );
+            }
+            else{
+                flag = 2;
+                Block.x_ordinate -= 0.3f;
+                Block.rotator(-90.0f, glm::vec3(1, 0, 0));
+                Block.translator(Block.x_ordinate, 0, Block.z_ordinate + 0.6f);
+            }
+            break;
+         case GLFW_KEY_DOWN:
+                if(flag == 0){
+                    flag = 1;
+                    Block.x_ordinate += 0.3f;
+                    Block.translator(Block.x_ordinate + 0.6f, 0, Block.z_ordinate);
+                    Block.rotator(90.0f, glm::vec3(0, 0, 1));
+                }
+                else if(flag == 1){
+                    flag = 0;
+                    Block.x_ordinate += 0.6f;
+                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate);
+                    Block.rotator( );
+                }
+                else{
+                    flag = 2;
+                    Block.x_ordinate += 0.3f;
+                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate + 0.6f);
+                    Block.rotator(-90.0f, glm::vec3(1, 0, 0));
+                }
+                break;
+         case GLFW_KEY_LEFT:
+                if(flag == 0){
+                    flag = 2;
+                    Block.z_ordinate += 0.3f;
+                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate + 0.6f);
+                    Block.rotator(-90.0f, glm::vec3(1, 0, 0));
+                }
+                else if(flag == 1){
+                    flag = 1;
+                    Block.z_ordinate += 0.3f;
+                    Block.translator(Block.x_ordinate + 0.6f, 0, Block.z_ordinate);
+                    Block.rotator(90.0f, glm::vec3(0, 0, 1));
+                }
+                else{
+                    flag = 0;
+                    Block.z_ordinate += 0.6f;
+                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate);
+                    Block.rotator( );
+                }
+                break;
+         case GLFW_KEY_RIGHT:
+                if(flag == 0){
+                    flag = 2;
+                    Block.z_ordinate -= 0.6f;
+                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate + 0.6f);
+                    Block.rotator(-90.0f, glm::vec3(1, 0, 0));
+                }
+                else if(flag == 1){
+                    flag = 1;
+                    Block.z_ordinate -= 0.3f;
+                    Block.translator(Block.x_ordinate + 0.6f, 0, Block.z_ordinate);
+                    Block.rotator(90.0f, glm::vec3(0, 0, 1));
+                }
+                else{
+                    flag = 0;
+                    Block.z_ordinate -= 0.3f;
+                    Block.translator(Block.x_ordinate, 0, Block.z_ordinate);
+                    Block.rotator( );
+                }
+                break;
+         case GLFW_KEY_ESCAPE:
+            quit(window);
+             break;
+       default:
+            break;
+        }
+    }
+}
+
+/* Executed for character input (like in text boxes) */
+void keyboardChar (GLFWwindow* window, unsigned int key)
+{
+    switch (key) {
+        case 'Q':
+        case 'q':
+            quit(window);
+            break;
+        default:
+            break;
+    }
+}
+
+/* Executed when a mouse button is pressed/released */
+void mouseButton (GLFWwindow* window, int button, int action, int mods)
+{
+    switch (button) {
+        case GLFW_MOUSE_BUTTON_LEFT:
+            break;
+        case GLFW_MOUSE_BUTTON_RIGHT:
+            break;
+        default:
+            break;
+    }
+}
 
 void drawAxes( )
 {
@@ -417,9 +470,14 @@ void getBoard( )
 
     void drawBoard( )
     {
-        for(int i = 0; i < 10; i++ )
-            for(int j = 0; j < 10; j++ )
+        for(int i = 0; i < 10; i++ ){
+            for(int j = 0; j < 10; j++ ){
+                Board[ i ][ j ].translator(Board[ i ][ j ].x_ordinate,
+                                                       Board[ i ][ j ].y_ordinate,
+                                                       Board[ i ][ j ].z_ordinate);   
                 Board[ i ][ j ].render( );
+            }
+        }
     }
 
 /* Render the scene with openGL */
@@ -449,7 +507,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h)
 
     // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
     //  Don't change unless you are sure!!
-    glm::mat4 VP = (proj_type?Matrices.projectionP:Matrices.projectionO) * Matrices.view;
+    glm::mat4 VP = Matrices.projectionO * Matrices.view;
 
     // Send our transformation to the currently bound shader, in the "MVP" uniform
     // For each model you render, since the MVP will be different (at least the M part)
@@ -482,12 +540,9 @@ void draw (GLFWwindow* window, float x, float y, float w, float h)
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
     draw3DObject(axes);
-    
-    Matrices.model = glm::mat4(1.0f);
-    MVP = VP * Matrices.model;
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    draw3DObject(createCell(0.3, 0.3, 0.6,1, 0, 0));
 
+    Block.render( );
+    
     // Increment angles
     float  increments = 1;
 
@@ -561,6 +616,10 @@ void initGL (GLFWwindow* window, int width, int height)
         z_ordinate += 0.3f;
     }
     
+    GraphicalObject temp = GraphicalObject( );
+    temp.object  = createCell(0.3, 0.3, 0.6, 1, 1, 0);
+    Block = temp;
+
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
