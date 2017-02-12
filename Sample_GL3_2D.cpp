@@ -308,7 +308,7 @@ int board[10][10] = {
         {1,1,1,1,1,1,0,0,0,0},
         {1,1,1,1,1,1,1,1,1,0},
         {0,1,1,1,1,1,1,1,1,1},
-        {0,0,0,0,0,1,1,0,1,1},
+        {0,0,0,0,0,1,1,2,1,1},
         {0,0,0,0,0,0,1,1,1,0},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
@@ -316,7 +316,7 @@ int board[10][10] = {
         {0,0,0,0,0,0,0,0,0,0}
     };
 
-float z_ordinate = 0.0f, y_ordinate = 0.0f, x_ordinate = 0.0f;
+float theta = 0, z_ordinate = 0.0f, y_ordinate = 0.0f, x_ordinate = 0.0f;
 int flag = 0, stageStart = 1;
 VAO *axes, *cell, *triangle, *rectangle;
 float camera_rotation_angle = 45.0f;
@@ -509,7 +509,21 @@ int stageStarting ( )
 
 void fallBlocksBoards ( )
 {
+    for ( int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++ ) {
+                  if ( Board[ i ][ j ].y_ordinate > -5.0f && board[ i ][ j ] == 1 ) {
+                        Board[ i ][ j ].y_ordinate = -5.0f;
+                    }
+                }   
+            }
 
+    stageStart = 1;
+    Block.y_ordinate = 5.0f;
+    Block.x_ordinate = 0.0f;
+    Block.z_ordinate = 0.0f;
+    flag = 0;
+    Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+    Block.rotator ( );
 }
 
 void buildBlocksBoards ( )
@@ -523,12 +537,6 @@ void buildBlocksBoards ( )
         }
     }
 
-    while ( Block.y_ordinate > 0 )
-    {
-         Block.y_ordinate -= 0.01f; 
-         Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
-         Block.render ( );
-    }
     stageStart = 0;
 }
 
@@ -537,13 +545,16 @@ int checkBlock ( )
     int i = ( Block.z_ordinate * 10 ) / 3;
     int j = ( Block.x_ordinate * 10 ) / 3;
 
-    if ( flag == 0 && board[ i ][ j ] == 1 )
+    if ( flag == 0 && board[ i ][ j ] == 2)
+        return 2;
+
+    if ( flag == 0 && board[ i ][ j ] == 0 )
         return 1;
     
-    if ( flag == 1 && board[ i ][ j ] == 1 && board[ i ][ j + 1 ] == 1 )
+    if ( flag == 1 && ( board[ i ][ j ] == 0 || board[ i ][ j + 1 ] == 0 ) )
         return 1;
     
-    if ( flag == 2 && board[ i ][ j ] == 1 && board[ i + 1 ][ j ] == 1 )
+    if ( flag == 2 && ( board[ i ][ j ] == 0 || board[ i + 1 ][ j ] == 0 ) )
         return 1;
 
     return 0;
@@ -602,6 +613,12 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
     Pop matrix to undo transformations till last push matrix instead of recomputing model matrix
     glPopMatrix ();
     */
+    
+    Matrices.model = glm::mat4 (1.0f);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv (Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject (axes);
+    
     if ( stageStart && stageStarting ( ) ) 
     {
         buildBlocksBoards ( );
@@ -609,18 +626,38 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
 
     drawBoard ( );
 
-    Matrices.model = glm::mat4 (1.0f);
-    MVP = VP * Matrices.model;
-    glUniformMatrix4fv (Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    draw3DObject (axes);
-    
-    if ( ! stageStart && checkBlock ( ) )
+    if ( Block.y_ordinate > 0 )
     {
-        Block.render ( );
+         Block.y_ordinate -= 0.1f; 
+         Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
     }
-    if ( ! checkBlock ( ) )
-    {   
-        fallBlocksBoards ( );
+
+    Block.render ( );
+
+    switch ( checkBlock ( ) ) {
+        
+        case 0:
+            Block.render ( );
+            break;
+        
+        case 1:
+            fallBlocksBoards ( );            
+            if ( Block.y_ordinate > -5.0f ) {
+                Block.y_ordinate -= 0.1f;
+                Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+            }   
+            break;
+        
+        case 2:
+            fallBlocksBoards ( ); 
+             if ( Block.y_ordinate > -5.0f ) {
+                Block.y_ordinate -= 0.1f;
+                Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+            }
+            break;
+        
+        default :
+            break;   
     }
 
 }
@@ -689,6 +726,7 @@ void initGL ( GLFWwindow* window, int width, int height )
         }
         z_ordinate += 0.3f;
     }
+
     x_ordinate = 0;
     y_ordinate = rand ( ) % 2 + 5.0f;
     z_ordinate = 0;
