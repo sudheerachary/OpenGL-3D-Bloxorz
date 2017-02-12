@@ -316,7 +316,7 @@ int board[10][10] = {
         {0,0,0,0,0,0,0,0,0,0}
     };
 
-float theta = 0, z_ordinate = 0.0f, y_ordinate = 0.0f, x_ordinate = 0.0f;
+float theta = 0.0f, z_ordinate = 0.0f, y_ordinate = 0.0f, x_ordinate = 0.0f;
 int flag = 0, stageStart = 1;
 VAO *axes, *cell, *triangle, *rectangle;
 float camera_rotation_angle = 45.0f;
@@ -480,11 +480,21 @@ void drawAxes( )
     axes = create3DObject ( GL_TRIANGLES, 9, vertex_buffer_data, color_buffer_data, GL_LINE );
 }
 
+void checkStart ( )
+{
+    for ( int i = 0; i < 10; i++ ) 
+        for ( int j = 0; j < 10; j++ ) 
+            if ( Board[ i ][ j ].y_ordinate > -5.0f && board[ i ][ j ] == 1)
+                return;
+        
+    stageStart = 1;
+}
+
 void drawBoard ( )
 {
-    for(int i = 0; i < 10; i++ ){
-        for(int j = 0; j < 10; j++ ){
-            if(board[ i ][ j ] == 1){
+    for ( int i = 0; i < 10; i++ ) {
+        for ( int j = 0; j < 10; j++ ) {
+            if ( board[ i ][ j ] == 1 ) {
                 Board[ i ][ j ].translator ( Board[ i ][ j ].x_ordinate,
                                                         Board[ i ][ j ].y_ordinate,
                                                         Board[ i ][ j ].z_ordinate );   
@@ -511,19 +521,11 @@ void fallBlocksBoards ( )
 {
     for ( int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++ ) {
-                  if ( Board[ i ][ j ].y_ordinate > -5.0f && board[ i ][ j ] == 1 ) {
-                        Board[ i ][ j ].y_ordinate = -5.0f;
+                  if ( Board[ i ][ j ].y_ordinate >= -5.0f && board[ i ][ j ] == 1 ) {
+                        Board[ i ][ j ].y_ordinate -= 1.0f;
                     }
                 }   
             }
-
-    stageStart = 1;
-    Block.y_ordinate = 5.0f;
-    Block.x_ordinate = 0.0f;
-    Block.z_ordinate = 0.0f;
-    flag = 0;
-    Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
-    Block.rotator ( );
 }
 
 void buildBlocksBoards ( )
@@ -626,7 +628,7 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
 
     drawBoard ( );
 
-    if ( Block.y_ordinate > 0 )
+    if ( ! stageStart && Block.y_ordinate > 0 )
     {
          Block.y_ordinate -= 0.1f; 
          Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
@@ -643,8 +645,24 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
         case 1:
             fallBlocksBoards ( );            
             if ( Block.y_ordinate > -5.0f ) {
+                if ( flag == 0) 
+                    Block.rotator ( theta, glm::vec3 ( 0, 0, 1) );
+                else if ( flag == 1 )
+                    Block.rotator ( 90.0f + theta, glm::vec3 (0, 1, 1) );
+                else 
+                    Block.rotator ( 90.0f + theta, glm::vec3 ( 1, 1, 0 ) );
                 Block.y_ordinate -= 0.1f;
+                theta += 7.5f;
                 Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+            }
+            else {       
+                theta = 0.0f;
+                Block.y_ordinate = 6.0f;
+                Block.x_ordinate = 0.0f;
+                Block.z_ordinate = 0.0f;
+                flag = 0;
+                Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+                Block.rotator ( );
             }   
             break;
         
@@ -654,12 +672,20 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
                 Block.y_ordinate -= 0.1f;
                 Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
             }
+            else {       
+                Block.y_ordinate = 6.0f;
+                Block.x_ordinate = 0.0f;
+                Block.z_ordinate = 0.0f;
+                flag = 0;
+                Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+                Block.rotator ( );
+            }
             break;
         
         default :
             break;   
     }
-
+    checkStart ( );
 }
 
 // Initialise glfw window, I/O callbacks and the renderer to use 
@@ -703,20 +729,20 @@ void initGL ( GLFWwindow* window, int width, int height )
     // Objects should be created before any other gl function and shaders 
     // Create the models
     drawAxes ( );
-
+    //BOARD
     float x_ordinate = 0.0f , z_ordinate = 0.0f;
     for( int i = 0; i < 10; i++ ){
          x_ordinate = 0.0f;
         for( int j = 0; j < 10;j++ ){
             if( ( i + j ) % 2 == 0 ){
-                y_ordinate = rand ( ) % 2 - 5.0f;
+                y_ordinate = rand ( ) % 2 - 6.0f;
                 VAO *cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 0 );
                 GraphicalObject temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f, 'r' );
                 temp.object = cell;
                 Board[ i ][ j ] = temp;
             }
             else{
-                y_ordinate = rand ( ) % 2 - 5.0f;
+                y_ordinate = rand ( ) % 2 - 6.0f;
                 VAO *cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 0 );
                 GraphicalObject temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'g' );
                 temp.object = cell;
@@ -726,13 +752,14 @@ void initGL ( GLFWwindow* window, int width, int height )
         }
         z_ordinate += 0.3f;
     }
-
+    // BLOCK
     x_ordinate = 0;
     y_ordinate = rand ( ) % 2 + 5.0f;
     z_ordinate = 0;
     GraphicalObject temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.6f, 0.3f );
     temp.object  = createCell ( 0.3f, 0.3f, 0.6f, 1, 1, 0 );
     Block = temp;
+    Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
 
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders ( "Sample_GL.vert", "Sample_GL.frag" );
