@@ -302,25 +302,84 @@ public:
 };
 
 // CONSTANTS //
-
-int board[10][10] = {
-        {1,1,1,0,0,0,0,0,0,0},
-        {1,1,1,1,1,1,0,0,0,0},
-        {1,1,1,1,1,1,1,1,1,0},
-        {0,1,1,1,1,1,1,1,1,1},
-        {0,0,0,0,0,1,1,2,1,1},
-        {0,0,0,0,0,0,1,1,1,0},
-        {0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,0,0,0,0,0,0,0}
+static const int board_size = 20;
+/*
+int board[board_size][board_size] = {
+        {1,1,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0},
+        {1,1,1,1,1,1,0,0,0,0, 0,0,0,0,0,0,0,0,0,0},
+        {1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
+        {0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,1,1,2,1,1,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     };
 
+ int board [board_size][board_size] = {
+        {1,1,1,3,3,3,3,3,3,3,1,1,0,0,0,0,0,0,0,0},
+        {1,1,1,3,3,3,3,3,3,3,1,1,0,0,0,0,0,0,0,0},
+        {1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0},
+        {1,1,1,0,0,1,1,1,1,3,3,3,3,3,0,0,0,0,0,0},
+        {1,1,1,0,0,1,1,1,1,3,3,3,3,3,0,0,0,0,0,0},
+        {0,0,0,0,0,1,2,1,0,0,3,3,1,3,0,0,0,0,0,0},
+        {0,0,0,0,0,1,1,1,0,0,3,3,3,3,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    };   
+    */
+int board [board_size][board_size]  = {
+    {1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,0,0,0,0,0},
+    {1,1,4,1,0,0,1,1,5,1,0,0,1,2,1,0,0,0,0,0},
+    {1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,0,0,0,0,0},
+    {1,1,1,1,7,7,1,1,1,1,7,7,1,1,1,0,0,0,0,0},
+    {1,1,1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+    };
+
+int A[4] = { 3, 4, 3, 5 }, B[4] = { 3, 10, 3, 11 }; 
 float theta = 0.0f, z_ordinate = 0.0f, y_ordinate = 0.0f, x_ordinate = 0.0f;
-int flag = 0, stageStart = 1;
+int level = 1, flag = 0, stageStart = 1, bridgeL = 0, bridgeR = 0;
+int prevBridgeL = 1, prevBridgeR = 1;
 VAO *axes, *cell, *triangle, *rectangle;
 float camera_rotation_angle = 45.0f;
-GraphicalObject Block, Board[10][10];
+GraphicalObject Block, Board[20][20];
 
 void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods )
 {
@@ -480,11 +539,19 @@ void drawAxes( )
     axes = create3DObject ( GL_TRIANGLES, 9, vertex_buffer_data, color_buffer_data, GL_LINE );
 }
 
+void levelup ( )
+{
+    level++;
+    cout<<level<<endl;
+}
+
 void checkStart ( )
 {
-    for ( int i = 0; i < 10; i++ ) 
-        for ( int j = 0; j < 10; j++ ) 
-            if ( Board[ i ][ j ].y_ordinate > -5.0f && board[ i ][ j ] == 1)
+    for ( int i = 0; i < board_size; i++ ) 
+        for ( int j = 0; j < board_size; j++ ) 
+            if ( Board[ i ][ j ].y_ordinate > -5.0f && 
+                board[ i ][ j ] != 0 &&
+                board[ i ][ j ] != 2 )
                 return;
         
     stageStart = 1;
@@ -492,9 +559,9 @@ void checkStart ( )
 
 void drawBoard ( )
 {
-    for ( int i = 0; i < 10; i++ ) {
-        for ( int j = 0; j < 10; j++ ) {
-            if ( board[ i ][ j ] == 1 ) {
+    for ( int i = 0; i < board_size; i++ ) {
+        for ( int j = 0; j < board_size; j++ ) {
+            if ( board[ i ][ j ] != 0 && board[ i ][ j ] != 2 && board[ i ][ j ] != 7 ) {
                 Board[ i ][ j ].translator ( Board[ i ][ j ].x_ordinate,
                                                         Board[ i ][ j ].y_ordinate,
                                                         Board[ i ][ j ].z_ordinate );   
@@ -506,9 +573,11 @@ void drawBoard ( )
 
 int stageStarting ( )
 {
-    for ( int i = 0; i < 10; i++ )
-        for ( int j = 0; j < 10; j++ )
-            if ( Board[ i ][ j ].y_ordinate < -0.1f && board[ i ][ j ] == 1 )
+    for ( int i = 0; i < board_size; i++ )
+        for ( int j = 0; j < board_size; j++ )
+            if ( Board[ i ][ j ].y_ordinate < -0.1f && 
+                board[ i ][ j ] != 0 &&
+                board[ i ][ j ] != 2 )
                     return 1;
 
     if ( Block.y_ordinate > 0 )
@@ -519,9 +588,11 @@ int stageStarting ( )
 
 void fallBlocksBoards ( )
 {
-    for ( int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++ ) {
-                  if ( Board[ i ][ j ].y_ordinate >= -5.0f && board[ i ][ j ] == 1 ) {
+    for ( int i = 0; i < board_size; i++) {
+            for (int j = 0; j < board_size; j++ ) {
+                  if ( Board[ i ][ j ].y_ordinate >= -5.0f && 
+                        board[ i ][ j ] != 0 &&
+                        board[ i ][ j ] != 2 ) {
                         Board[ i ][ j ].y_ordinate -= 1.0f;
                     }
                 }   
@@ -530,9 +601,11 @@ void fallBlocksBoards ( )
 
 void buildBlocksBoards ( )
 {
-    for ( int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++ ) {
-            if ( Board[ i ][ j ].y_ordinate < -0.1f && board[ i ][ j ] == 1 ) {
+    for ( int i = 0; i < board_size; i++) {
+        for (int j = 0; j < board_size; j++ ) {
+            if ( Board[ i ][ j ].y_ordinate < -0.1f && 
+                board[ i ][ j ] != 0 && 
+                board[ i ][ j ] != 2 ) {
                 Board[ i ][ j ].y_ordinate += 1.0f;
                 return;
             }
@@ -547,17 +620,57 @@ int checkBlock ( )
     int i = ( Block.z_ordinate * 10 ) / 3;
     int j = ( Block.x_ordinate * 10 ) / 3;
 
+    if ( ( flag == 0 && board[ i ][ j ] ==  4 ) ||
+        ( flag == 1 && ( board[ i ][ j ] == 4 || board[ i ][ j + 1 ] == 4 ) ) ||
+        ( flag == 2 && ( board[ i ][ j ] == 4 || board[ i + 1][ j ] == 4 ) ) ) {
+        if ( bridgeL == 0 ) {
+            board[A[0]][A[1]] = 1;
+            board[A[2]][A[3]] = 1; 
+            prevBridgeL = bridgeL;
+        }
+        else {
+            board[A[0]][A[1]] = 7;
+            board[A[2]][A[3]] = 7;
+            prevBridgeL = 1;
+        }
+        return 0;
+    }
+
+    if ( prevBridgeL == 0 )
+        bridgeL = 1;
+    else
+        bridgeL = 0;
+
+    if ( ( flag == 0 && board[ i ][ j ] == 5 ) ||
+         ( flag == 1 && ( board[ i ][ j ] == 5 || board[ i ][ j + 1 ] == 5 ) ) ||
+         ( flag == 2 && ( board[ i ][ j ] == 5 || board[ i + 1 ][ j ] == 5 ) ) ) {
+        if ( bridgeR == 0) {
+            board[B[0]][B[1]] = 1;
+            board[B[2]][B[3]] = 1;
+            prevBridgeR = 0;
+        }
+        else {
+            board[B[0]][B[1]] = 7;
+            board[B[2]][B[3]] = 7;   
+            prevBridgeR = 1;
+        }
+        return 0;
+    }
+
+    if ( prevBridgeR == 0 )
+        bridgeR = 1;
+    else
+        bridgeR = 0;
+
+    if ( ( i < 0 || j < 0) || 
+            ( flag == 0 && board[ i ][ j ] == 3 )  ||
+            ( flag == 0 && board[ i ][ j ] == 0 || board[ i ][ j ] == 7 ) ||
+            ( flag == 1 && ( board[ i ][ j ] == 0 || board[ i ][ j + 1 ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j + 1 ] == 7) ) ||      
+            ( flag == 2 && ( board[ i ][ j ] == 0 || board[ i + 1 ][ j ] == 0 || board[ i ][ j ] == 7 || board[ i + 1 ][ j ] == 7) ) )
+        return 1;
+
     if ( flag == 0 && board[ i ][ j ] == 2)
         return 2;
-
-    if ( flag == 0 && board[ i ][ j ] == 0 )
-        return 1;
-    
-    if ( flag == 1 && ( board[ i ][ j ] == 0 || board[ i ][ j + 1 ] == 0 ) )
-        return 1;
-    
-    if ( flag == 2 && ( board[ i ][ j ] == 0 || board[ i + 1 ][ j ] == 0 ) )
-        return 1;
 
     return 0;
 }
@@ -595,32 +708,14 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
     // For each model you render, since the MVP will be different (at least the M part)
     //  Don't change unless you are sure!!
     glm::mat4 MVP;	// MVP = Projection * View * Model
-    /*
-    Load identity to model matrix
-    Matrices.model = glm::mat4(1.0f);
-
-    Render your scene
-    glm::mat4 translateTriangle = glm::translate (tri_pos); // glTranslatef
-    glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
-    glm::mat4 triangleTransform = translateTriangle * rotateTriangle;
-    Matrices.model *= triangleTransform; 
-    MVP = VP * Matrices.model; // MVP = p * V * M
-
-    Don't change unless you are sure!!
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-    draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(triangle);
-
-    Pop matrix to undo transformations till last push matrix instead of recomputing model matrix
-    glPopMatrix ();
-    */
     
+    /*
     Matrices.model = glm::mat4 (1.0f);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv (Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
     draw3DObject (axes);
-    
+    */
+
     if ( stageStart && stageStarting ( ) ) 
     {
         buildBlocksBoards ( );
@@ -656,6 +751,10 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
                 Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
             }
             else {       
+                board[A[0]][A[1]] = 7;
+                board[A[2]][A[3]] = 7;
+                board[B[0]][B[1]] = 7;
+                board[B[2]][B[3]] = 7;
                 theta = 0.0f;
                 Block.y_ordinate = 6.0f;
                 Block.x_ordinate = 0.0f;
@@ -673,6 +772,10 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
                 Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
             }
             else {       
+                board[A[0]][A[1]] = 7;
+                board[A[2]][A[3]] = 7;
+                board[B[0]][B[1]] = 7;
+                board[B[2]][B[3]] = 7;
                 Block.y_ordinate = 6.0f;
                 Block.x_ordinate = 0.0f;
                 Block.z_ordinate = 0.0f;
@@ -729,50 +832,56 @@ void initGL ( GLFWwindow* window, int width, int height )
     // Objects should be created before any other gl function and shaders 
     // Create the models
     drawAxes ( );
-    //BOARD
-    float x_ordinate = 0.0f , z_ordinate = 0.0f;
-    for( int i = 0; i < 10; i++ ){
-         x_ordinate = 0.0f;
-        for( int j = 0; j < 10;j++ ){
-            if( ( i + j ) % 2 == 0 ){
-                y_ordinate = rand ( ) % 2 - 6.0f;
-                VAO *cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 0 );
-                GraphicalObject temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f, 'r' );
-                temp.object = cell;
-                Board[ i ][ j ] = temp;
-            }
-            else{
-                y_ordinate = rand ( ) % 2 - 6.0f;
-                VAO *cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 0 );
-                GraphicalObject temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'g' );
-                temp.object = cell;
-                Board[ i ][ j ] = temp;
-            }
-            x_ordinate += 0.3f;
-        }
-        z_ordinate += 0.3f;
-    }
+
     // BLOCK
-    x_ordinate = 0;
-    y_ordinate = rand ( ) % 2 + 5.0f;
-    z_ordinate = 0;
+    x_ordinate = 0.0f;
+    y_ordinate = rand ( ) % 2 + 6.0f;
+    z_ordinate = 0.0f;
     GraphicalObject temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.6f, 0.3f );
     temp.object  = createCell ( 0.3f, 0.3f, 0.6f, 1, 1, 0 );
     Block = temp;
     Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
 
+    //BOARD
+    for ( int i = 0; i < board_size; i++ ) {
+        VAO *cell;
+        GraphicalObject temp;
+         x_ordinate = 0.0f;
+        for ( int j = 0; j < board_size; j++ ) {
+            y_ordinate = rand ( ) % 2 - 6.0f;
+            if ( board[ i ][ j ] == 1) {
+                if ( ( i + j ) % 2 == 0 ) {
+                    cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 0 );
+                    temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f, 'r' );
+                }
+                else {
+                    cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 0 );
+                    temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'g' );
+                }
+            }
+            else if( board[ i ][ j ] == 3 ) {
+                cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 1 );
+                temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );
+            }
+            else {
+                cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 1 );
+                temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );   
+            }
+            temp.object = cell;
+            Board[ i ][ j ] = temp;
+            x_ordinate += 0.3f;
+        }
+        z_ordinate += 0.3f;
+    }
+
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders ( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
     Matrices.MatrixID = glGetUniformLocation ( programID, "MVP" );
-
-
     reshapeWindow ( window, width, height );
-
     // Background color of the scene
     glClearColor ( 0.3f, 0.3f, 0.3f, 0.0f ); // R, G, B, A
     glClearDepth ( 1.0f );
-
     glEnable ( GL_DEPTH_TEST );
     glDepthFunc ( GL_LEQUAL );
 }
