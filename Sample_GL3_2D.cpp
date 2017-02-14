@@ -2,7 +2,7 @@
 #include <cmath>
 #include <fstream>
 #include <vector>
-
+#include <map>
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
@@ -13,6 +13,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 using namespace std;
+
+GLFWwindow* window;
 
 struct VAO {
     GLuint VertexArrayID;
@@ -303,8 +305,9 @@ public:
 
 // CONSTANTS //
 static const int board_size = 20;
-/*
-int board[board_size][board_size] = {
+int board[ board_size ][ board_size ];
+
+int stage1 [board_size][board_size] = {
         {1,1,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0},
         {1,1,1,1,1,1,0,0,0,0, 0,0,0,0,0,0,0,0,0,0},
         {1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
@@ -327,7 +330,7 @@ int board[board_size][board_size] = {
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     };
 
- int board [board_size][board_size] = {
+ int stage2 [board_size][board_size] = {
         {1,1,1,3,3,3,3,3,3,3,1,1,0,0,0,0,0,0,0,0},
         {1,1,1,3,3,3,3,3,3,3,1,1,0,0,0,0,0,0,0,0},
         {1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0},
@@ -348,9 +351,9 @@ int board[board_size][board_size] = {
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    };   
-    */
-int board [board_size][board_size]  = {
+    };    
+
+int stage3 [board_size][board_size]  = {
     {1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,0,0,0,0,0},
     {1,1,4,1,0,0,1,1,5,1,0,0,1,2,1,0,0,0,0,0},
     {1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,0,0,0,0,0},
@@ -373,13 +376,28 @@ int board [board_size][board_size]  = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
     };
 
-int A[4] = { 3, 4, 3, 5 }, B[4] = { 3, 10, 3, 11 }; 
-float theta = 0.0f, z_ordinate = 0.0f, y_ordinate = 0.0f, x_ordinate = 0.0f;
-int level = 1, flag = 0, stageStart = 1, bridgeL = 0, bridgeR = 0;
-int prevBridgeL = 1, prevBridgeR = 1;
-VAO *axes, *cell, *triangle, *rectangle;
-float camera_rotation_angle = 45.0f;
-GraphicalObject Block, Board[20][20];
+map < int , vector< int > > bridgeMap;    
+
+float theta = 0.0f, 
+        z_ordinate = 0.0f, 
+        y_ordinate = 0.0f, 
+        x_ordinate = 0.0f,
+        camera_rotation_angle = 45.0f;
+
+int level = 1, 
+    flag = 0, 
+    stageStart = 1, 
+    prev_Bridge = 4,
+    prevBridge[10], 
+    bridge[10];
+
+VAO *axes, 
+        *cell, 
+        *triangle, 
+        *rectangle;
+
+GraphicalObject Block, 
+                            Board[20][20];
 
 void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods )
 {
@@ -538,11 +556,92 @@ void drawAxes( )
     };
     axes = create3DObject ( GL_TRIANGLES, 9, vertex_buffer_data, color_buffer_data, GL_LINE );
 }
+void bridgeConstruct ( )
+{
+    vector < int > v;
+    
+    for ( map < int, vector< int > >::iterator it = bridgeMap.begin ( ); it != bridgeMap.end ( ); it++ ) {
+        vector < int > V = bridgeMap[it->first];
+        for ( int i = 0; i < board_size; i++ ) {
+            for ( int j = 0; j < board_size; j++ ) {
+                if ( board[ i ][ j ] == it->first ) {  
+                    for ( int i = 0; i < 4; i += 2 )
+                        board[ V [ i ] ][ V [ i + 1 ] ] = 7;
+
+                    bridge[ it->first ] = 0;
+                    prevBridge[ it->first ] = 1;
+                }
+            }
+        }
+    }
+    // Bridge 1
+    v.push_back(3);
+    v.push_back(4);
+    v.push_back(3);
+    v.push_back(5);
+    bridgeMap.insert ( make_pair ( 4, v) );
+    v.clear ( );
+
+    // Bridge 2
+    v.push_back(3);
+    v.push_back(10);
+    v.push_back(3);
+    v.push_back(11);
+    bridgeMap.insert ( make_pair ( 5, v ) );
+    v.clear ( );
+}
 
 void levelup ( )
 {
     level++;
-    cout<<level<<endl;
+    switch ( level ) {
+        case 2:
+            for ( int i = 0; i < board_size; i++ )
+                for ( int j = 0; j < board_size; j++ )
+                    board[ i ][ j ] = stage2[ i ][ j ];
+            break;
+        case 3:
+            for ( int i = 0; i < board_size; i++ )
+                for ( int j = 0; j < board_size; j++ )
+                    board[ i ][ j ] = stage3[ i ][ j ];
+            break;
+        default:
+            quit ( window );
+            break;
+    };
+
+    z_ordinate = 0.0f;
+    for ( int i = 0; i < board_size; i++ ) {
+            VAO *cell;
+            GraphicalObject temp;
+             x_ordinate = 0.0f;
+            for ( int j = 0; j < board_size; j++ ) {
+                y_ordinate = rand ( ) % 2 - 6.0f;
+                if ( board[ i ][ j ] == 1) {
+                    if ( ( i + j ) % 2 == 0 ) {
+                        cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 0 );
+                        temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f, 'r' );
+                    }
+                    else {
+                        cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 0 );
+                        temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'g' );
+                    }
+                }
+                else if ( board[ i ][ j ] == 3 ) {
+                    cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 1 );
+                    temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );
+                }
+                else {
+                    cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 1 );
+                    temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );   
+                }
+                temp.object = cell;
+                Board[ i ][ j ] = temp;
+                x_ordinate += 0.3f;
+            }
+            z_ordinate += 0.3f;
+        }
+        bridgeConstruct ( );
 }
 
 void checkStart ( )
@@ -561,12 +660,11 @@ void drawBoard ( )
 {
     for ( int i = 0; i < board_size; i++ ) {
         for ( int j = 0; j < board_size; j++ ) {
-            if ( board[ i ][ j ] != 0 && board[ i ][ j ] != 2 && board[ i ][ j ] != 7 ) {
-                Board[ i ][ j ].translator ( Board[ i ][ j ].x_ordinate,
+            Board[ i ][ j ].translator ( Board[ i ][ j ].x_ordinate,
                                                         Board[ i ][ j ].y_ordinate,
                                                         Board[ i ][ j ].z_ordinate );   
+            if ( board[ i ][ j ] != 0 && board[ i ][ j ] != 2 && board[ i ][ j ] != 7 )
                 Board[ i ][ j ].render ( );
-            }
         }
     }
 }
@@ -620,59 +718,96 @@ int checkBlock ( )
     int i = ( Block.z_ordinate * 10 ) / 3;
     int j = ( Block.x_ordinate * 10 ) / 3;
 
-    if ( ( flag == 0 && board[ i ][ j ] ==  4 ) ||
-        ( flag == 1 && ( board[ i ][ j ] == 4 || board[ i ][ j + 1 ] == 4 ) ) ||
-        ( flag == 2 && ( board[ i ][ j ] == 4 || board[ i + 1][ j ] == 4 ) ) ) {
-        if ( bridgeL == 0 ) {
-            board[A[0]][A[1]] = 1;
-            board[A[2]][A[3]] = 1; 
-            prevBridgeL = bridgeL;
-        }
-        else {
-            board[A[0]][A[1]] = 7;
-            board[A[2]][A[3]] = 7;
-            prevBridgeL = 1;
-        }
-        return 0;
-    }
-
-    if ( prevBridgeL == 0 )
-        bridgeL = 1;
-    else
-        bridgeL = 0;
-
-    if ( ( flag == 0 && board[ i ][ j ] == 5 ) ||
-         ( flag == 1 && ( board[ i ][ j ] == 5 || board[ i ][ j + 1 ] == 5 ) ) ||
-         ( flag == 2 && ( board[ i ][ j ] == 5 || board[ i + 1 ][ j ] == 5 ) ) ) {
-        if ( bridgeR == 0) {
-            board[B[0]][B[1]] = 1;
-            board[B[2]][B[3]] = 1;
-            prevBridgeR = 0;
-        }
-        else {
-            board[B[0]][B[1]] = 7;
-            board[B[2]][B[3]] = 7;   
-            prevBridgeR = 1;
-        }
-        return 0;
-    }
-
-    if ( prevBridgeR == 0 )
-        bridgeR = 1;
-    else
-        bridgeR = 0;
-
     if ( ( i < 0 || j < 0) || 
-            ( flag == 0 && board[ i ][ j ] == 3 )  ||
-            ( flag == 0 && board[ i ][ j ] == 0 || board[ i ][ j ] == 7 ) ||
-            ( flag == 1 && ( board[ i ][ j ] == 0 || board[ i ][ j + 1 ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j + 1 ] == 7) ) ||      
-            ( flag == 2 && ( board[ i ][ j ] == 0 || board[ i + 1 ][ j ] == 0 || board[ i ][ j ] == 7 || board[ i + 1 ][ j ] == 7) ) )
+        ( flag == 0 && ( board[ i ][ j ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j ] == 3 ) ) ||
+        ( flag == 1 && ( board[ i ][ j ] == 0 || board[ i ][ j + 1 ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j + 1 ] == 7) ) ||      
+        ( flag == 2 && ( board[ i ][ j ] == 0 || board[ i + 1 ][ j ] == 0 || board[ i ][ j ] == 7 || board[ i + 1 ][ j ] == 7) ) )
         return 1;
 
     if ( flag == 0 && board[ i ][ j ] == 2)
         return 2;
 
+    if ( ( flag == 0 && board[ i ][ j ] >  3 ) ||
+        ( flag == 1 && ( board[ i ][ j ] > 3 || board[ i ][ j + 1 ] > 3 ) ) ||
+        ( flag == 2 && ( board[ i ][ j ] > 3 || board[ i + 1 ][ j ] > 3 ) ) ) {
+          
+        int a = i, b = j;
+        if ( flag == 0 ) {
+            a = i;
+            b = j;
+        }
+        else if ( flag == 1 ) {
+            if ( board[ i ][ j ] > 3 ) {
+                a = i;
+                b = j;
+            }
+            else {
+                a = i;
+                b = j + 1;
+            }
+        }
+        else {
+            if ( board[ i ][ j ] > 3 ) {
+                a = i;
+                b = j;
+            }
+            else {
+                a = i + 1;
+                b = j;
+            }
+        }
+
+        vector < int > V = bridgeMap[ board[ a ][ b ] ] ;
+        
+        if ( bridge[ board[ a ][ b ] ] == 0 ) {
+            for ( int k = 0; k < V.size ( ); k+=2 ) 
+                board[ V[ k ] ][ V[ k + 1 ] ] = 1;
+        
+            prevBridge[ board[ a ][ b ] ] = 0;
+        }
+        else {
+            for ( int k = 0; k < V.size ( ); k+=2 ) 
+                board[ V[ k ] ][ V[ k + 1 ] ] = 7;
+            
+            prevBridge[ board[ a ][ b ] ] = 1;
+        }
+        prev_Bridge = board[ a ][ b ];
+        return 0;
+    }
+
+    if ( prevBridge[ prev_Bridge] == 0 ) {
+        bridge[ prev_Bridge ] = 1;
+    }
+    else {
+        bridge[ prev_Bridge ] = 0;
+    }
+
     return 0;
+}
+
+void reset ( )
+{    
+    for ( map < int, vector< int > >::iterator it = bridgeMap.begin ( ); it != bridgeMap.end ( ); it++ ) {
+        vector < int > V = bridgeMap[it->first];
+        for ( int i = 0; i < board_size; i++ ) {
+            for ( int j = 0; j < board_size; j++ ) {
+                if ( board[ i ][ j ] == it->first ) {  
+                    for ( int i = 0; i < 4; i += 2 )
+                        board[ V [ i ] ][ V [ i + 1 ] ] = 7;
+
+                    bridge[ it->first ] = 0;
+                    prevBridge[ it->first ] = 1;
+                }
+            }
+        }
+    }
+    theta = 0.0f;
+    flag = 0;
+    Block.y_ordinate = 6.0f;
+    Block.x_ordinate = 0.0f;
+    Block.z_ordinate = 0.0f;
+    Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+    Block.rotator ( );
 }
 
 // Render the scene with openGL 
@@ -750,19 +885,8 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
                 theta += 7.5f;
                 Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
             }
-            else {       
-                board[A[0]][A[1]] = 7;
-                board[A[2]][A[3]] = 7;
-                board[B[0]][B[1]] = 7;
-                board[B[2]][B[3]] = 7;
-                theta = 0.0f;
-                Block.y_ordinate = 6.0f;
-                Block.x_ordinate = 0.0f;
-                Block.z_ordinate = 0.0f;
-                flag = 0;
-                Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
-                Block.rotator ( );
-            }   
+            else 
+                reset ( );
             break;
         
         case 2:
@@ -771,17 +895,9 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
                 Block.y_ordinate -= 0.1f;
                 Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
             }
-            else {       
-                board[A[0]][A[1]] = 7;
-                board[A[2]][A[3]] = 7;
-                board[B[0]][B[1]] = 7;
-                board[B[2]][B[3]] = 7;
-                Block.y_ordinate = 6.0f;
-                Block.x_ordinate = 0.0f;
-                Block.z_ordinate = 0.0f;
-                flag = 0;
-                Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
-                Block.rotator ( );
+            else { 
+                reset ( );
+                levelup ( );
             }
             break;
         
@@ -794,7 +910,7 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
 // Initialise glfw window, I/O callbacks and the renderer to use 
 GLFWwindow* initGLFW ( int width, int height ){
     GLFWwindow* window;        // window desciptor/handle
-
+    const char *Game = "Bloxorz";
     glfwSetErrorCallback ( error_callback );
     if ( ! glfwInit ( ) ) {
         exit ( EXIT_FAILURE );
@@ -818,6 +934,7 @@ GLFWwindow* initGLFW ( int width, int height ){
    glfwSetFramebufferSizeCallback ( window, reshapeWindow );
    glfwSetWindowSizeCallback ( window, reshapeWindow );
    glfwSetWindowCloseCallback (window, quit );
+   glfwSetWindowTitle(window, Game);
     glfwSetKeyCallback ( window, keyboard );      // general keyboard input
     glfwSetCharCallback(window, keyboardChar);  // simpler specific character handling
     glfwSetMouseButtonCallback ( window, mouseButton );  // mouse button clicks
@@ -843,6 +960,10 @@ void initGL ( GLFWwindow* window, int width, int height )
     Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
 
     //BOARD
+    for ( int i = 0; i < board_size; i++ )
+        for ( int j = 0; j < board_size; j++ )
+            board[ i ][ j ] = stage1[ i ][ j ];
+
     for ( int i = 0; i < board_size; i++ ) {
         VAO *cell;
         GraphicalObject temp;
@@ -859,7 +980,7 @@ void initGL ( GLFWwindow* window, int width, int height )
                     temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'g' );
                 }
             }
-            else if( board[ i ][ j ] == 3 ) {
+            else if ( board[ i ][ j ] == 3 ) {
                 cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 1 );
                 temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );
             }
@@ -873,6 +994,7 @@ void initGL ( GLFWwindow* window, int width, int height )
         }
         z_ordinate += 0.3f;
     }
+    bridgeConstruct ( );
 
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders ( "Sample_GL.vert", "Sample_GL.frag" );
@@ -891,7 +1013,7 @@ int main ( int argc, char** argv )
     int width = 1000;
     int height = 1000;
 
-    GLFWwindow* window = initGLFW ( width, height );
+    window = initGLFW ( width, height );
     initGLEW ( );
     initGL ( window, width, height );
 
