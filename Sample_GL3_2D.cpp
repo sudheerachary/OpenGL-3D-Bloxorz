@@ -212,6 +212,7 @@ void draw3DObject ( struct VAO* vao )
     glDrawArrays ( vao->PrimitiveMode, 0, vao->NumVertices ); // Starting from vertex 0; 3 vertices total -> 1 triangle
 }
 
+int perspective = 0;
 /* Executed when window is resized to 'width' and 'height' */
 /* Modify the bounds of the screen here in glm::ortho or Field of View in glm::Perspective */
 void reshapeWindow ( GLFWwindow* window, int width, int height )
@@ -232,7 +233,29 @@ void reshapeWindow ( GLFWwindow* window, int width, int height )
     Matrices.projectionO = glm::ortho ( -4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f );
 }
 
-VAO *createCell ( float l, float b, float h, float r, float g, float bl )
+GLfloat *createColor ( float r1, float g1, float b1, 
+                                    float r2, float g2, float b2,
+                                    float r3, float g3, float b3) {
+    
+        GLfloat *color_buffer_data = ( GLfloat * ) malloc ( sizeof ( float ) * 108 );
+    
+        GLfloat Color [ ] = {
+        r1, g1, b1, r1, g1, b1, r1, g1, b1, r1, g1, b1, r1, g1, b1, r1, g1, b1,  //1
+        r2, g2, b2, r2, g2, b2, r2, g2, b2, r2, g2, b2, r2, g2, b2, r2, g2, b2,  //2
+        r3, g3, b3, r3, g3, b3, r3, g3, b3, r3, g3, b3, r3, g3, b3, r3, g3, b3,  //3 
+
+        r1, g1, b1, r1, g1, b1,r1, g1, b1,r1, g1, b1,r1, g1, b1, r1, g1, b1,   //4
+        r2, g2, b2, r2, g2, b2, r2, g2, b2, r2, g2, b2, r2, g2, b2, r2, g2, b2, //5
+        r3, g3, b3, r3, g3, b3, r3, g3, b3, r3, g3, b3, r3, g3, b3, r3, g3, b3, //6
+    };
+    
+    for ( int i = 0; i < 108; i++ )
+        color_buffer_data[ i ] = Color[ i ];
+
+    return color_buffer_data;
+}
+
+VAO *createCell ( float l, float b, float h, GLfloat Color [ ] )
 {
     GLfloat vertex_buffer_data [ ] = {
         0, 0, 0, b, 0, 0, b, h, 0, b, h, 0, 0, h, 0, 0, 0 , 0,        //1
@@ -244,16 +267,7 @@ VAO *createCell ( float l, float b, float h, float r, float g, float bl )
         0, h, l, b, h, l, b, h, 0, b, h, 0, 0, h, 0, 0, h, l         //6
     };
 
-    GLfloat color_buffer_data [ ] = {
-        r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
-        r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
-        r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
-        
-        r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
-        r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl,
-        r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, r, g, bl, 
-    };
-    return create3DObject ( GL_TRIANGLES, 36, vertex_buffer_data, color_buffer_data, GL_FILL );
+    return create3DObject ( GL_TRIANGLES, 36, vertex_buffer_data, Color, GL_FILL );
 }
 
 class GraphicalObject
@@ -302,10 +316,9 @@ public:
         Itranslate_matrix = glm::translate ( glm::vec3 ( x, y, z ) );
   }
 
- 
   void render ( )
   {
-      glm::mat4 VP = Matrices.projectionO * Matrices.view;
+      glm::mat4 VP = ( perspective ? Matrices.projectionP : Matrices.projectionO ) * Matrices.view;
       glm::mat4 MVP;
       Matrices.model = glm::mat4 ( 1.0f );
       Matrices.model *= translate_matrix*rotate_matrix*Itranslate_matrix*Irotate_matrix;
@@ -317,7 +330,110 @@ public:
 };
 
 // CONSTANTS //
+GLfloat digitopbar[] = {
+                  0.1,0.35,0,
+                  -0.1,0.35,0,
+                  -0.1,0.30,0,
+
+                  -0.1,0.30,0,
+                  0.1,0.30,0,
+                  0.1,0.35,0
+                };
+
+GLfloat digitmidbar [] = {
+                  0.1,0.05,0,
+                  -0.1,0.05,0,
+                  -0.1,-0.05,0,
+
+                  -0.1,-0.05,0,
+                  0.1,-0.05,0,
+                  0.1,0.05,0
+                };
+
+GLfloat digitbotbar [] = {
+                0.1,-0.30,0,
+                -0.1,-0.30,0,
+                -0.1,-0.35,0,
+
+                -0.1,-0.35,0,
+                0.1,-0.35,0,
+                0.1,-0.30,0
+                };
+
+GLfloat digitlefttopbar [] = {
+                              -0.05,0.30,0,
+                              -0.1,0.30,0,
+                              -0.1,0.05,0,
+
+                              -0.1,0.05,0,
+                              -0.05,0.05,0,
+                              -0.05,0.30,0
+                            };
+
+GLfloat digitleftbotbar [] = {
+                              -0.05,-0.05,0,
+                              -0.1,-0.05,0,
+                              -0.1,-0.30,0,
+
+                              -0.1,-0.30,0,
+                              -0.05,-0.30,0,
+                              -0.05,-0.05,0
+                              };
+
+GLfloat digitrighttopbar [] = {
+                              0.1,0.30,0,
+                              0.05,0.30,0,
+                              0.05,0.05,0,
+
+                              0.05,0.05,0,
+                              0.1,0.05,0,
+                              0.1,0.30,0
+                              };
+GLfloat digitrightbotbar [] = {
+                              0.1,-0.05,0,
+                              0.05,-0.05,0,
+                              0.05,-0.30,0,
+
+                              0.05,-0.30,0,
+                              0.1,-0.30,0,
+                              0.1,-0.05,0
+                              };
+GLfloat darkyellow[] = {
+                                        1,1,0,
+                                        1,1,0,
+                                        1,1,0,
+        
+                                        1,1,0,
+                                        1,1,0,
+                                        1,1,0
+                                    };
+
+GLfloat *Grey = createColor ( 0.30196, 0.30196, 0.30196, 
+                                                0.50196, 0.50196, 0.50196,
+                                                0.85098, 0.85098, 0.85098 ); 
+
+GLfloat *White = createColor ( 0.54902, 0.54902, 0.54902,
+                                                    0.8, 0.8, 0.8,
+                                                    0.94902, 0.94902, 0.94902 );
+
+GLfloat *Blue = createColor ( 0, 0.52549, 0.70196,
+                                                    0, 0.74902, 1,
+                                                    0.50196, 0.87451, 1 );
+
+GLfloat *Green = createColor ( 0.45098, 0.6, 0,
+                                                        0.6, 0.8, 0,
+                                                        0.82353, 1,  0.30196);
+
+GLfloat *Orange = createColor ( 0.70196, 0.56078, 0,
+                                                        0.8, 0.63922, 0,
+                                                        1, 0.83922,  0.2 );
+
+GLfloat *Dorange = createColor ( 0.8, 0.63922, 0,
+                                                            0.90196, 0.72157, 0,
+                                                            1, 0.87843, 0.4 );
+
 static const int board_size = 20;
+    
 int board[ board_size ][ board_size ];
 
 int stage1 [board_size][board_size] = {
@@ -389,13 +505,20 @@ int stage3 [board_size][board_size]  = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
     };
 
+int stage4 [board_size][board_size] = {
+
+};
+
+glm::vec3 eye; 
+glm::vec3 target;
+
 map < int , vector< int > > bridgeMap;    
 
 float theta = 0.0f, 
         z_ordinate = 0.0f, 
         y_ordinate = 0.0f, 
         x_ordinate = 0.0f,
-        camera_rotation_angle = 45.0f;
+        camera_rotation_angle = 70.0f;
 
 int level = 1, 
     stageStart = 1, 
@@ -404,13 +527,146 @@ int level = 1,
     bridge[10],
     presentState = 0,
     futureState = 0,
-    direction = 5;
+    direction = 5,
+    views = 4,
+    moves = 0;
 
 VAO *axes, 
         *cell; 
 
 GraphicalObject Block, 
                             Board[20][20];
+
+void renderscore(double x, double y, int score)
+{
+  double x_ordinate = x, y_ordinate = y;
+  glm::mat4 VP = ( perspective? Matrices.projectionP:Matrices.projectionO ) * Matrices.view;
+  glm::mat4 MVP;
+  glm::mat4 Irotator = glm::rotate(70.0f, glm::vec3(0,1,0));
+  glm::mat4 Itranslator = glm::translate(glm::vec3(0.5f,0,0));
+  if(score == 0){
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translator = glm::translate(glm::vec3(x_ordinate, y_ordinate, 0));
+    Matrices.model *= translator*Irotator*Itranslator;
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(create3DObject(GL_TRIANGLES, 6, digitopbar, darkyellow, GL_FILL));
+    draw3DObject(create3DObject(GL_TRIANGLES, 6, digitlefttopbar, darkyellow, GL_FILL));
+    draw3DObject(create3DObject(GL_TRIANGLES, 6, digitleftbotbar, darkyellow, GL_FILL));
+    draw3DObject(create3DObject(GL_TRIANGLES, 6, digitbotbar, darkyellow, GL_FILL));
+    draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+    draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrighttopbar, darkyellow, GL_FILL));
+    return;
+  }
+  int tmp = score;
+  while(tmp != 0){
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translator = glm::translate(glm::vec3(x_ordinate, y_ordinate, 0));
+    switch(tmp%10){
+      case 0:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitlefttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitleftbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrighttopbar, darkyellow, GL_FILL));
+        break;
+      case 1:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrighttopbar, darkyellow, GL_FILL));
+          break;
+      case 2:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrighttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitmidbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitleftbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitbotbar, darkyellow, GL_FILL));
+          break;
+      case 3:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrighttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitmidbar, darkyellow, GL_FILL));
+        break;
+      case 4:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitlefttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrighttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitmidbar, darkyellow, GL_FILL));
+        break;
+      case 5:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitlefttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitmidbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+        break;
+      case 6:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitlefttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitmidbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitleftbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+        break;
+      case 7:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrighttopbar, darkyellow, GL_FILL));
+        break;
+      case 8:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitlefttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitleftbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrighttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitmidbar, darkyellow, GL_FILL));
+        break;
+      case 9:
+        Matrices.model *= translator*Irotator*Itranslator;
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitlefttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrightbotbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitrighttopbar, darkyellow, GL_FILL));
+        draw3DObject(create3DObject(GL_TRIANGLES, 6, digitmidbar, darkyellow, GL_FILL));
+        break;
+    }
+    tmp = tmp/10;
+    x_ordinate -= 0.3;
+  }
+}
 
 void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods )
 {
@@ -424,52 +680,59 @@ void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods 
    }
    else if ( action == GLFW_PRESS ) {
     switch ( key ) {
-         case GLFW_KEY_UP:
-            
+        case GLFW_KEY_V:
+            views = ( views + 1 ) % 5;
+            break;
+
+        case GLFW_KEY_P:
+            if ( perspective == 1 )
+                perspective = 0;
+            else 
+                perspective = 1;
+            break;
+
+         case GLFW_KEY_UP:    
             if ( presentState == 0 )
                 futureState = 1;
             else if ( presentState == 1 ) 
                 futureState = 0;
             else
                 futureState = 2;
-            
             direction = 8;
+            moves++;
             break;
             
          case GLFW_KEY_DOWN:
-
             if ( presentState == 0 )
                 futureState = 1;
             else if ( presentState == 1 ) 
                 futureState = 0;
             else if ( presentState == 2 )
                 futureState = 2;
-            
             direction = 2;
+            moves++;
             break;
                
          case GLFW_KEY_LEFT:
-                
             if ( presentState == 0 )
                 futureState = 2;
             else if ( presentState == 1 ) 
                 futureState = 1;
             else if ( presentState == 2 )
                 futureState = 0;
-            
             direction = 4;
+            moves++;
             break;
         
          case GLFW_KEY_RIGHT:
-
             if ( presentState == 0 )
                 futureState = 2;
             else if ( presentState == 1 ) 
                 futureState = 1;
             else if ( presentState == 2 )
                 futureState = 0;
-            
             direction = 6;
+            moves++;
             break;
     
          case GLFW_KEY_ESCAPE:
@@ -588,62 +851,61 @@ void blockRotator ( )
             Block.Irotator ( );
             Block.Itranslator ( -Block.length, 0 , 0 );
             Block.rotator ( -theta, glm::vec3 ( 0, 0, 1) );
-            Block.translator ( Block.x_ordinate+Block.length, Block.y_ordinate, Block.z_ordinate );   
+            Block.translator ( Block.x_ordinate+Block.length - 1, Block.y_ordinate, Block.z_ordinate - 1 );   
         }
         else if ( direction == 4 ) {
             Block.Irotator ( );
             Block.Itranslator ( );
             Block.rotator ( theta, glm::vec3 ( 0, 0, 1 ) ); 
-            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+            Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1);
         }
         else if ( direction == 8 ) {
             Block.Irotator ( );
             Block.Itranslator ( );
             Block.rotator ( -theta, glm::vec3 ( 1, 0, 0 ) );
-            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+            Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1);
         }
         else if ( direction == 2 ) {
             Block.Irotator ( );
             Block.Itranslator ( 0, 0, -Block.length );
             Block.rotator ( theta, glm::vec3 ( 1, 0, 0 ) );
-            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate + Block.length );
+            Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate + Block.length - 1);
         }
         else {
             Block.Irotator ( );
             Block.Itranslator ( );
             Block.rotator ( );
-            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+            Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1 );
         }
     }
     else if ( presentState == 1 ) {
         if ( direction == 6 ) {
-            // Block.Irotator ( );
             Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
             Block.Itranslator ( -Block.length, 0, 0 );
             Block.rotator ( -theta, glm::vec3 ( 0, 0, 1) );
-            Block.translator ( Block.x_ordinate + Block.length, Block.y_ordinate, Block.z_ordinate + Block.height );
+            Block.translator ( Block.x_ordinate + Block.length - 1, Block.y_ordinate, Block.z_ordinate + Block.height - 1 );
         }
         else if ( direction == 4 ) {
             Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
             Block.Itranslator ( );
             Block.rotator ( theta, glm::vec3 ( 0, 0, 1) );
-            Block.translator ( Block.x_ordinate , Block.y_ordinate, Block.z_ordinate + Block.height );
+            Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate + Block.height - 1);
         }
         else if ( direction == 8 ) {
             Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
             Block.Itranslator ( 0, 0, Block.height );
             Block.rotator ( -theta, glm::vec3 (1, 0, 0 ) );
-            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+            Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1);
         }
         else if ( direction == 2 ) {
             Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
             Block.Itranslator ( );
             Block.rotator ( theta, glm::vec3 (1, 0, 0 ) );
-            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate + Block.height );
+            Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate + Block.height - 1);
         }
         else {
             Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
-            Block.Itranslator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate + Block.height ); 
+            Block.Itranslator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate + Block.height - 1); 
             Block.rotator ( );
             Block.translator ( );
         }
@@ -653,34 +915,33 @@ void blockRotator ( )
             Block.Irotator ( 90, glm::vec3 ( 0, 0, 1 ) );
             Block.Itranslator ( );
             Block.rotator ( -theta, glm::vec3 (0, 0, 1) );
-            Block.translator ( Block.x_ordinate + Block.height, Block.y_ordinate, Block.z_ordinate );
+            Block.translator ( Block.x_ordinate + Block.height - 1, Block.y_ordinate, Block.z_ordinate - 1);
         }
         else if ( direction == 4 ) {
             Block.Irotator ( 90, glm::vec3 ( 0, 0, 1 ) );
             Block.Itranslator ( Block.height, 0 , 0 );
             Block.rotator ( theta, glm::vec3 ( 0, 0, 1 ) );
-            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+            Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1);
         }
         else if ( direction == 8 ) {
             Block.Irotator ( 90, glm::vec3 ( 0, 0, 1 ) );
             Block.Itranslator ( );
             Block.rotator ( -theta, glm::vec3 ( 1, 0, 0 ) );
-            Block.translator ( Block.x_ordinate + Block.height, Block.y_ordinate, Block.z_ordinate );
+            Block.translator ( Block.x_ordinate + Block.height - 1, Block.y_ordinate, Block.z_ordinate - 1);
         }
         else if ( direction == 2 ) {
             Block.Irotator ( 90, glm::vec3 ( 0, 0, 1 ) );
             Block.Itranslator ( 0, 0, -Block.length );
             Block.rotator ( theta, glm::vec3 ( 1, 0, 0 ) );
-            Block.translator ( Block.x_ordinate + Block.height, Block.y_ordinate, Block.z_ordinate + Block.length);
+            Block.translator ( Block.x_ordinate + Block.height - 1, Block.y_ordinate, Block.z_ordinate + Block.length - 1);
         }
         else {
             Block.Irotator ( );
             Block.Itranslator ( );
             Block.rotator ( 90, glm::vec3 ( 0, 0, 1 ) );
-            Block.translator ( Block.x_ordinate + Block.height, Block.y_ordinate, Block.z_ordinate );
+            Block.translator ( Block.x_ordinate + Block.height - 1, Block.y_ordinate, Block.z_ordinate - 1 );
         }
     }
-    
 }
 
 void bridgeConstruct ( )
@@ -746,20 +1007,26 @@ void levelup ( )
                 y_ordinate = rand ( ) % 2 - 6.0f;
                 if ( board[ i ][ j ] == 1) {
                     if ( ( i + j ) % 2 == 0 ) {
-                        cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 0 );
+                        cell = createCell ( 0.3f, 0.3f, -0.1f, Grey );
                         temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f, 'r' );
                     }
                     else {
-                        cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 0 );
+                        cell = createCell ( 0.3f, 0.3f, -0.1f, White );
                         temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'g' );
                     }
                 }
                 else if ( board[ i ][ j ] == 3 ) {
-                    cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 1 );
-                    temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );
+                    if ( ( i + j ) % 2 == 0 ) {
+                        cell = createCell ( 0.3f, 0.3f, -0.1f,  Orange);
+                        temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );
+                    }
+                    else {
+                        cell = createCell ( 0.3f, 0.3f, -0.1f,  Dorange );
+                        temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );   
+                    }
                 }
                 else {
-                    cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 1 );
+                    cell = createCell ( 0.3f, 0.3f, -0.1f,  Green);
                     temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );   
                 }
                 temp.object = cell;
@@ -787,9 +1054,9 @@ void drawBoard ( )
 {
     for ( int i = 0; i < board_size; i++ ) {
         for ( int j = 0; j < board_size; j++ ) {
-            Board[ i ][ j ].translator ( Board[ i ][ j ].x_ordinate,
+            Board[ i ][ j ].translator ( Board[ i ][ j ].x_ordinate - 1,
                                                         Board[ i ][ j ].y_ordinate,
-                                                        Board[ i ][ j ].z_ordinate );   
+                                                        Board[ i ][ j ].z_ordinate - 1);   
             if ( board[ i ][ j ] != 0 && board[ i ][ j ] != 2 && board[ i ][ j ] != 7 )
                 Board[ i ][ j ].render ( );
         }
@@ -805,7 +1072,7 @@ int stageStarting ( )
                 board[ i ][ j ] != 2 )
                     return 1;
 
-    if ( Block.y_ordinate > 0 )
+    if ( Block.y_ordinate > 0.1 )
             return 1;
 
     return 0;
@@ -912,6 +1179,46 @@ int checkBlock ( )
     return 0;
 }
 
+void Viewer ( )
+{
+    switch ( views ) {
+            case 0:
+                //Block
+                perspective = 1;
+                eye = glm::vec3 ( Block.x_ordinate, 1, Block.z_ordinate );
+                target = glm::vec3 ( 5 , 0.1, 5 ) ;
+                break;
+            case 1:
+                //Top
+                perspective = 1;
+                eye = glm::vec3 (Block.x_ordinate, 3, Block.z_ordinate);
+                target = glm::vec3 ( Block.x_ordinate + 0.3, 0, Block.z_ordinate);
+                break;
+            case 2:
+                //Follow
+                perspective = 1;
+                eye = glm::vec3 ( Block.x_ordinate - 0.6, Block.height + 1, Block.z_ordinate );
+                target = glm::vec3 ( Block.x_ordinate + 0.6, 0.1, Block.z_ordinate + 0.6); 
+                break;
+            case 3:
+                //Helicopter
+                perspective = 0;
+                eye = glm::vec3 ( 4*cos((float)camera_rotation_angle*M_PI/180.0f), 4,  4*sin((float)camera_rotation_angle*M_PI/180.0f) );
+                target = glm::vec3 ( 0, 0, 0 );
+                break;
+            case 4:
+                //Tower
+                perspective = 0;
+                eye = glm::vec3 ( 4*cos((float)camera_rotation_angle*M_PI/180.0f), 4,  4*sin((float)camera_rotation_angle*M_PI/180.0f) );
+                target =  glm::vec3 ( 0, 0, 0 );
+                break;
+            default:
+                //Nothing
+                break;
+        }
+
+}
+
 void reset ( )
 {    
     for ( map < int, vector< int > >::iterator it = bridgeMap.begin ( ); it != bridgeMap.end ( ); it++ ) {
@@ -936,7 +1243,7 @@ void reset ( )
     Block.Irotator( );
     Block.Itranslator( );
     Block.rotator ( );
-    Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+    Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1);
 }
 
 // Render the scene with openGL 
@@ -952,10 +1259,8 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
     // Don't change unless you know what you are doing
     glUseProgram ( programID );
 
-    // Eye - Location of camera. Don't change unless you are sure!!
-    glm::vec3 eye ( 3*cos((float)camera_rotation_angle*M_PI/180.0f), 3,  3*sin((float)camera_rotation_angle*M_PI/180.0f) );
-    // Target - Where is the camera looking at.  Don't change unless you are sure!!
-    glm::vec3 target ( 0, 0, 0 );
+    Viewer ( );
+
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
     glm::vec3 up ( 0, 1, 0 );
 
@@ -966,8 +1271,10 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
 
     // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
     //  Don't change unless you are sure!!
-    glm::mat4 VP = Matrices.projectionO * Matrices.view;
+    glm::mat4 VP =  ( perspective ? Matrices.projectionP : Matrices.projectionO ) * Matrices.view;
 
+    renderscore ( 3 , 4.8, ( int ) glfwGetTime ( ) );
+    renderscore ( -1, 3, moves );
     // Send our transformation to the currently bound shader, in the "MVP" uniform
     // For each model you render, since the MVP will be different (at least the M part)
     //  Don't change unless you are sure!!
@@ -987,7 +1294,7 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
 
     drawBoard ( );
 
-    if ( ! stageStart && Block.y_ordinate > 0 )
+    if ( ! stageStart && Block.y_ordinate > 0.1 )
     {
          Block.y_ordinate -= 0.1f; 
     }
@@ -1014,7 +1321,7 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
                     Block.rotator ( 90.0f + theta, glm::vec3 ( 1, 1, 0 ) );
                 Block.y_ordinate -= 0.1f;
                 theta += 7.5f;
-                Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+                Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1 );
             }
             else 
                 reset ( );
@@ -1036,6 +1343,8 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
             break;   
     }
     checkStart ( );
+
+    // camera_rotation_angle+=0.5;
 }
 
 // Initialise glfw window, I/O callbacks and the renderer to use 
@@ -1086,9 +1395,9 @@ void initGL ( GLFWwindow* window, int width, int height )
     y_ordinate = rand ( ) % 2 + 6.0f;
     z_ordinate = 0.0f;
     GraphicalObject temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.6f, 0.3f );
-    temp.object  = createCell ( 0.3f, 0.3f, 0.6f, 1, 1, 0 );
+    temp.object  = createCell ( 0.3f, 0.3f, 0.6f,  Blue);
     Block = temp;
-    Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+    Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1 );
 
     //BOARD
     for ( int i = 0; i < board_size; i++ )
@@ -1103,20 +1412,26 @@ void initGL ( GLFWwindow* window, int width, int height )
             y_ordinate = rand ( ) % 2 - 6.0f;
             if ( board[ i ][ j ] == 1) {
                 if ( ( i + j ) % 2 == 0 ) {
-                    cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 0 );
+                    cell = createCell ( 0.3f, 0.3f, -0.1f, Grey );
                     temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f, 'r' );
                 }
                 else {
-                    cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 0 );
+                    cell = createCell ( 0.3f, 0.3f, -0.1f, White );
                     temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'g' );
                 }
             }
             else if ( board[ i ][ j ] == 3 ) {
-                cell = createCell ( 0.3f, 0.3f, -0.1f, 0, 1, 1 );
-                temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );
+                if ( ( i + j ) % 2 == 0 ) {
+                    cell = createCell ( 0.3f, 0.3f, -0.1f,  Orange );
+                    temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );
+                }
+                else {
+                    cell = createCell ( 0.3f, 0.3f, -0.1f,  Dorange );
+                    temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );   
+                }
             }
             else {
-                cell = createCell ( 0.3f, 0.3f, -0.1f, 1, 0, 1 );
+                cell = createCell ( 0.3f, 0.3f, -0.1f,  Green );
                 temp = GraphicalObject ( x_ordinate, y_ordinate, z_ordinate, 0.1f, 0.3f,  'b' );   
             }
             temp.object = cell;
