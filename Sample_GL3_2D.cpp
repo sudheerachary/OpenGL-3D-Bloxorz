@@ -266,6 +266,8 @@ public:
     float height;
     float length;
     char color;
+    glm::mat4 Itranslate_matrix;
+    glm::mat4 Irotate_matrix;
     glm::mat4 translate_matrix;
     glm::mat4 rotate_matrix;
 
@@ -279,8 +281,13 @@ public:
       length = L;
       color = colour;
   }
+
+  void Irotator ( float rotation = 0, glm::vec3 rotating_vector = glm::vec3 ( 0, 0, 1 ) ) 
+  {
+    Irotate_matrix = glm::rotate ( (float)(rotation*M_PI/180.0f), rotating_vector );
+  }
  
-  void rotator (float rotation=0, glm::vec3 rotating_vector=glm::vec3 ( 0,0,1 ) )
+  void rotator ( float rotation = 0, glm::vec3 rotating_vector = glm::vec3 ( 0, 0, 1 ) )
   {
       rotate_matrix = glm::rotate ( (float)(rotation*M_PI/180.0f), rotating_vector );
   }
@@ -289,13 +296,19 @@ public:
   {
         translate_matrix = glm::translate ( glm::vec3 ( x, y, z ) );
   }
+
+  void Itranslator (float x = 0, float y = 0, float z = 0 )
+  {
+        Itranslate_matrix = glm::translate ( glm::vec3 ( x, y, z ) );
+  }
+
  
   void render ( )
   {
       glm::mat4 VP = Matrices.projectionO * Matrices.view;
       glm::mat4 MVP;
       Matrices.model = glm::mat4 ( 1.0f );
-      Matrices.model = translate_matrix*rotate_matrix;
+      Matrices.model *= translate_matrix*rotate_matrix*Itranslate_matrix*Irotate_matrix;
       MVP = VP * Matrices.model;
       glUniformMatrix4fv ( Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0] );
       draw3DObject ( object );
@@ -385,16 +398,16 @@ float theta = 0.0f,
         camera_rotation_angle = 45.0f;
 
 int level = 1, 
-    flag = 0, 
     stageStart = 1, 
     prev_Bridge = 4,
     prevBridge[10], 
-    bridge[10];
+    bridge[10],
+    presentState = 0,
+    futureState = 0,
+    direction = 5;
 
 VAO *axes, 
-        *cell, 
-        *triangle, 
-        *rectangle;
+        *cell; 
 
 GraphicalObject Block, 
                             Board[20][20];
@@ -412,84 +425,53 @@ void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods 
    else if ( action == GLFW_PRESS ) {
     switch ( key ) {
          case GLFW_KEY_UP:
-            if ( flag == 0 ) {
-                flag = 1;
-                Block.x_ordinate -= Block.height;
-                Block.rotator ( 90.0f, glm::vec3 ( 0, 0, 1 ) );
-            }
-            else if ( flag == 1 ) {
-                flag = 0;
-                Block.x_ordinate -= Block.length;
-                Block.translator ( Block.x_ordinate, 0, Block.z_ordinate );
-                Block.rotator ( );
-            }
-            else {
-                flag = 2;
-                Block.x_ordinate -= Block.length;
-                Block.rotator ( -90.0f, glm::vec3 ( 1, 0, 0 ) );
-                Block.translator ( Block.x_ordinate, 0, Block.z_ordinate + Block.height );
-            }
+            
+            if ( presentState == 0 )
+                futureState = 1;
+            else if ( presentState == 1 ) 
+                futureState = 0;
+            else
+                futureState = 2;
+            
+            direction = 8;
             break;
+            
          case GLFW_KEY_DOWN:
-                if ( flag == 0 ) {
-                    flag = 1;
-                    Block.x_ordinate += Block.length;
-                    Block.translator ( Block.x_ordinate + Block.height, 0, Block.z_ordinate );
-                    Block.rotator ( 90.0f, glm::vec3 ( 0, 0, 1 ) );
-                }
-                else if ( flag == 1 ) {
-                    flag = 0;
-                    Block.x_ordinate += Block.height;
-                    Block.translator ( Block.x_ordinate, 0, Block.z_ordinate );
-                    Block.rotator ( );
-                }
-                else {
-                    flag = 2;
-                    Block.x_ordinate += Block.length;
-                    Block.translator ( Block.x_ordinate, 0, Block.z_ordinate + Block.height );
-                    Block.rotator( -90.0f, glm::vec3 ( 1, 0, 0 ) );
-                }
-                break;
+
+            if ( presentState == 0 )
+                futureState = 1;
+            else if ( presentState == 1 ) 
+                futureState = 0;
+            else if ( presentState == 2 )
+                futureState = 2;
+            
+            direction = 2;
+            break;
+               
          case GLFW_KEY_LEFT:
-                if ( flag == 0 ) {
-                    flag = 2;
-                    Block.z_ordinate += Block.length;
-                    Block.translator ( Block.x_ordinate, 0, Block.z_ordinate + Block.height );
-                    Block.rotator ( -90.0f, glm::vec3 ( 1, 0, 0 ) );
-                }
-                else if ( flag == 1 ) {
-                    flag = 1;
-                    Block.z_ordinate += Block.length;
-                    Block.translator ( Block.x_ordinate + Block.height, 0, Block.z_ordinate );
-                    Block.rotator ( 90.0f, glm::vec3 ( 0, 0, 1 ) );
-                }
-                else {
-                    flag = 0;
-                    Block.z_ordinate += Block.height;
-                    Block.translator ( Block.x_ordinate, 0, Block.z_ordinate );
-                    Block.rotator ( );
-                }
-                break;
+                
+            if ( presentState == 0 )
+                futureState = 2;
+            else if ( presentState == 1 ) 
+                futureState = 1;
+            else if ( presentState == 2 )
+                futureState = 0;
+            
+            direction = 4;
+            break;
+        
          case GLFW_KEY_RIGHT:
-                if ( flag == 0 ) {
-                    flag = 2;
-                    Block.translator ( Block.x_ordinate, 0, Block.z_ordinate );
-                    Block.z_ordinate -= Block.height;
-                    Block.rotator ( -90.0f, glm::vec3 ( 1, 0, 0 ) );
-                }
-                else if ( flag == 1 ) {
-                    flag = 1;
-                    Block.z_ordinate -= Block.length;
-                    Block.translator ( Block.x_ordinate + Block.height, 0, Block.z_ordinate );
-                    Block.rotator ( 90.0f, glm::vec3 ( 0, 0, 1 ) );
-                }
-                else {
-                    flag = 0;
-                    Block.z_ordinate -= Block.length;
-                    Block.translator ( Block.x_ordinate, 0, Block.z_ordinate );
-                    Block.rotator ( );
-                }
-                break;
+
+            if ( presentState == 0 )
+                futureState = 2;
+            else if ( presentState == 1 ) 
+                futureState = 1;
+            else if ( presentState == 2 )
+                futureState = 0;
+            
+            direction = 6;
+            break;
+    
          case GLFW_KEY_ESCAPE:
             quit ( window );
              break;
@@ -556,6 +538,151 @@ void drawAxes( )
     };
     axes = create3DObject ( GL_TRIANGLES, 9, vertex_buffer_data, color_buffer_data, GL_LINE );
 }
+
+void blockRotator ( )
+{
+    
+    if ( theta < 90 && direction != 5 )
+        theta += 10;
+    else
+    {
+        if ( presentState != futureState || direction != 5) {
+            if ( presentState == 0 ){
+                if ( direction == 8) 
+                    Block.z_ordinate -= Block.height;
+                else if ( direction == 2 ) 
+                    Block.z_ordinate += Block.length;
+                else if ( direction == 4 ) 
+                    Block.x_ordinate -= Block.height;
+                else 
+                    Block.x_ordinate += Block.length;
+            }
+            else if ( presentState == 1 ) {
+                if ( direction == 8) 
+                    Block.z_ordinate -= Block.length;
+                else if ( direction == 2 ) 
+                    Block.z_ordinate += Block.height;
+                else if ( direction == 4 ) 
+                    Block.x_ordinate -= Block.length;
+                else 
+                    Block.x_ordinate += Block.length;
+            }
+            else {
+                if ( direction == 8) 
+                    Block.z_ordinate -= Block.length;
+                else if ( direction == 2 ) 
+                    Block.z_ordinate += Block.length;
+                else if ( direction == 4 ) 
+                    Block.x_ordinate -= Block.length;
+                else 
+                    Block.x_ordinate += Block.height;
+            }
+        }
+        presentState = futureState;
+        theta = 0;
+        direction = 5;
+    }
+
+    if ( presentState == 0 ) {
+        if ( direction == 6 ) {
+            Block.Irotator ( );
+            Block.Itranslator ( -Block.length, 0 , 0 );
+            Block.rotator ( -theta, glm::vec3 ( 0, 0, 1) );
+            Block.translator ( Block.x_ordinate+Block.length, Block.y_ordinate, Block.z_ordinate );   
+        }
+        else if ( direction == 4 ) {
+            Block.Irotator ( );
+            Block.Itranslator ( );
+            Block.rotator ( theta, glm::vec3 ( 0, 0, 1 ) ); 
+            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+        }
+        else if ( direction == 8 ) {
+            Block.Irotator ( );
+            Block.Itranslator ( );
+            Block.rotator ( -theta, glm::vec3 ( 1, 0, 0 ) );
+            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+        }
+        else if ( direction == 2 ) {
+            Block.Irotator ( );
+            Block.Itranslator ( 0, 0, -Block.length );
+            Block.rotator ( theta, glm::vec3 ( 1, 0, 0 ) );
+            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate + Block.length );
+        }
+        else {
+            Block.Irotator ( );
+            Block.Itranslator ( );
+            Block.rotator ( );
+            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+        }
+    }
+    else if ( presentState == 1 ) {
+        if ( direction == 6 ) {
+            // Block.Irotator ( );
+            Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
+            Block.Itranslator ( -Block.length, 0, 0 );
+            Block.rotator ( -theta, glm::vec3 ( 0, 0, 1) );
+            Block.translator ( Block.x_ordinate + Block.length, Block.y_ordinate, Block.z_ordinate + Block.height );
+        }
+        else if ( direction == 4 ) {
+            Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
+            Block.Itranslator ( );
+            Block.rotator ( theta, glm::vec3 ( 0, 0, 1) );
+            Block.translator ( Block.x_ordinate , Block.y_ordinate, Block.z_ordinate + Block.height );
+        }
+        else if ( direction == 8 ) {
+            Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
+            Block.Itranslator ( 0, 0, Block.height );
+            Block.rotator ( -theta, glm::vec3 (1, 0, 0 ) );
+            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+        }
+        else if ( direction == 2 ) {
+            Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
+            Block.Itranslator ( );
+            Block.rotator ( theta, glm::vec3 (1, 0, 0 ) );
+            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate + Block.height );
+        }
+        else {
+            Block.Irotator ( -90, glm::vec3 ( 1, 0, 0 ) );
+            Block.Itranslator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate + Block.height ); 
+            Block.rotator ( );
+            Block.translator ( );
+        }
+    }
+    else {
+        if ( direction == 6 ) {
+            Block.Irotator ( 90, glm::vec3 ( 0, 0, 1 ) );
+            Block.Itranslator ( );
+            Block.rotator ( -theta, glm::vec3 (0, 0, 1) );
+            Block.translator ( Block.x_ordinate + Block.height, Block.y_ordinate, Block.z_ordinate );
+        }
+        else if ( direction == 4 ) {
+            Block.Irotator ( 90, glm::vec3 ( 0, 0, 1 ) );
+            Block.Itranslator ( Block.height, 0 , 0 );
+            Block.rotator ( theta, glm::vec3 ( 0, 0, 1 ) );
+            Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+        }
+        else if ( direction == 8 ) {
+            Block.Irotator ( 90, glm::vec3 ( 0, 0, 1 ) );
+            Block.Itranslator ( );
+            Block.rotator ( -theta, glm::vec3 ( 1, 0, 0 ) );
+            Block.translator ( Block.x_ordinate + Block.height, Block.y_ordinate, Block.z_ordinate );
+        }
+        else if ( direction == 2 ) {
+            Block.Irotator ( 90, glm::vec3 ( 0, 0, 1 ) );
+            Block.Itranslator ( 0, 0, -Block.length );
+            Block.rotator ( theta, glm::vec3 ( 1, 0, 0 ) );
+            Block.translator ( Block.x_ordinate + Block.height, Block.y_ordinate, Block.z_ordinate + Block.length);
+        }
+        else {
+            Block.Irotator ( );
+            Block.Itranslator ( );
+            Block.rotator ( 90, glm::vec3 ( 0, 0, 1 ) );
+            Block.translator ( Block.x_ordinate + Block.height, Block.y_ordinate, Block.z_ordinate );
+        }
+    }
+    
+}
+
 void bridgeConstruct ( )
 {
     vector < int > v;
@@ -719,31 +846,31 @@ int checkBlock ( )
     int j = ( Block.x_ordinate * 10 ) / 3;
 
     if ( ( i < 0 || j < 0) || 
-        ( flag == 0 && ( board[ i ][ j ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j ] == 3 ) ) ||
-        ( flag == 1 && ( board[ i ][ j ] == 0 || board[ i ][ j + 1 ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j + 1 ] == 7) ) ||      
-        ( flag == 2 && ( board[ i ][ j ] == 0 || board[ i + 1 ][ j ] == 0 || board[ i ][ j ] == 7 || board[ i + 1 ][ j ] == 7) ) )
+        ( presentState == 0 && ( board[ i ][ j ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j ] == 3 ) ) ||
+        ( presentState == 1 && ( board[ i ][ j ] == 0 || board[ i + 1 ][ j ] == 0 || board[ i + 1 ][ j ] == 7 || board[ i ][ j + 1 ] == 7) ) ||      
+        ( presentState == 2 && ( board[ i ][ j ] == 0 || board[ i ][ j + 1 ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j + 1 ] == 7) ) )
         return 1;
 
-    if ( flag == 0 && board[ i ][ j ] == 2)
+    if ( presentState == 0 && board[ i ][ j ] == 2)
         return 2;
 
-    if ( ( flag == 0 && board[ i ][ j ] >  3 ) ||
-        ( flag == 1 && ( board[ i ][ j ] > 3 || board[ i ][ j + 1 ] > 3 ) ) ||
-        ( flag == 2 && ( board[ i ][ j ] > 3 || board[ i + 1 ][ j ] > 3 ) ) ) {
-          
+    if ( ( presentState == 0 && board[ i ][ j ] >  3 ) ||
+        ( presentState == 1 && ( board[ i ][ j ] > 3 || board[ i + 1][ j ] > 3 ) ) ||
+        ( presentState == 2 && ( board[ i ][ j ] > 3 || board[ i ][ j + 1 ] > 3 ) ) ) {
+
         int a = i, b = j;
-        if ( flag == 0 ) {
+        if ( presentState == 0 ) {
             a = i;
             b = j;
         }
-        else if ( flag == 1 ) {
+        else if ( presentState == 1 ) {
             if ( board[ i ][ j ] > 3 ) {
                 a = i;
                 b = j;
             }
             else {
-                a = i;
-                b = j + 1;
+                a = i + 1;
+                b = j ;
             }
         }
         else {
@@ -752,13 +879,13 @@ int checkBlock ( )
                 b = j;
             }
             else {
-                a = i + 1;
-                b = j;
+                a = i ;
+                b = j + 1;
             }
         }
 
         vector < int > V = bridgeMap[ board[ a ][ b ] ] ;
-        
+
         if ( bridge[ board[ a ][ b ] ] == 0 ) {
             for ( int k = 0; k < V.size ( ); k+=2 ) 
                 board[ V[ k ] ][ V[ k + 1 ] ] = 1;
@@ -792,9 +919,8 @@ void reset ( )
         for ( int i = 0; i < board_size; i++ ) {
             for ( int j = 0; j < board_size; j++ ) {
                 if ( board[ i ][ j ] == it->first ) {  
-                    for ( int i = 0; i < 4; i += 2 )
-                        board[ V [ i ] ][ V [ i + 1 ] ] = 7;
-
+                    for ( int k = 0; k < 4; k += 2 )
+                        board[ V [ k ] ][ V [ k + 1 ] ] = 7;
                     bridge[ it->first ] = 0;
                     prevBridge[ it->first ] = 1;
                 }
@@ -802,12 +928,15 @@ void reset ( )
         }
     }
     theta = 0.0f;
-    flag = 0;
+    direction = 5;
+    presentState = futureState = 0;
     Block.y_ordinate = 6.0f;
     Block.x_ordinate = 0.0f;
     Block.z_ordinate = 0.0f;
-    Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
+    Block.Irotator( );
+    Block.Itranslator( );
     Block.rotator ( );
+    Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
 }
 
 // Render the scene with openGL 
@@ -861,11 +990,13 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
     if ( ! stageStart && Block.y_ordinate > 0 )
     {
          Block.y_ordinate -= 0.1f; 
-         Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
     }
 
-    Block.render ( );
+    blockRotator ( );
 
+    // Block.render ( );
+
+    
     switch ( checkBlock ( ) ) {
         
         case 0:
@@ -875,9 +1006,9 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
         case 1:
             fallBlocksBoards ( );            
             if ( Block.y_ordinate > -5.0f ) {
-                if ( flag == 0) 
+                if ( presentState == 0) 
                     Block.rotator ( theta, glm::vec3 ( 0, 0, 1) );
-                else if ( flag == 1 )
+                else if ( presentState == 1 )
                     Block.rotator ( 90.0f + theta, glm::vec3 (0, 1, 1) );
                 else 
                     Block.rotator ( 90.0f + theta, glm::vec3 ( 1, 1, 0 ) );
