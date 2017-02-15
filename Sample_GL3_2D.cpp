@@ -787,6 +787,7 @@ void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods 
                     futureState = 2;
                 direction = 8;
                 moves++;
+                system("mpg123 -n 30 -i -q movement.mp4 &");
             }
             break;
             
@@ -800,6 +801,7 @@ void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods 
                     futureState = 2;
                 direction = 2;
                 moves++;
+                system("mpg123 -n 30 -i -q movement.mp4 &");
             }
             break;
                
@@ -813,6 +815,7 @@ void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods 
                     futureState = 0;
                 direction = 4;
                 moves++;
+                system("mpg123 -n 30 -i -q movement.mp4 &");
             }
             break;
         
@@ -826,6 +829,7 @@ void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods 
                     futureState = 0;
                 direction = 6;
                 moves++;
+                system("mpg123 -n 30 -i -q movement.mp4 &");
             }
             break;
     
@@ -881,41 +885,8 @@ void mouseButton ( GLFWwindow* window, int button, int action, int mods )
     }
 }
 
-void drawAxes( )
-{
-    static const GLfloat vertex_buffer_data [ ] = {
-        0,0,0,
-        0,0,0,
-        5,0,0,
-
-        0,0,0,
-        0,0,0,
-        0,5,0,
-
-        0,0,0,
-        0,0,0,
-        0,0,5
-    };
-
-    static const GLfloat color_buffer_data [ ] = {
-        0,1,1,
-        0,1,1,
-        0,1,1,
-        
-        0,1,1,
-        0,1,1,
-        0,1,1,
-
-        0,1,1,
-        0,1,1,
-        0,1,1
-    };
-    axes = create3DObject ( GL_TRIANGLES, 9, vertex_buffer_data, color_buffer_data, GL_LINE );
-}
-
 void blockRotator ( )
-{
-    
+{    
     if ( theta < 90 && direction != 5 )
         theta += 10;
     else
@@ -1360,10 +1331,6 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
 
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
     glm::vec3 up ( 0, 1, 0 );
-
-    // Compute Camera matrix (view)
-    // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
-    //  Don't change unless you are sure!!
     Matrices.view = glm::lookAt ( eye, target, up ); // Fixed camera for 2D (ortho) in XY plane
 
     // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
