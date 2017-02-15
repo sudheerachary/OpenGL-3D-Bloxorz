@@ -520,33 +520,119 @@ float theta = 0.0f,
         x_ordinate = 0.0f,
         camera_rotation_angle = 70.0f;
 
-int level = 1, 
-    stageStart = 1, 
-    prev_Bridge = 4,
-    prevBridge[10], 
-    bridge[10],
-    presentState = 0,
-    futureState = 0,
-    direction = 5,
-    views = 4,
-    moves = 0;
+int level = 1, stageStart = 1, 
+    prev_Bridge = 4, prevBridge[10], bridge[10],
+    presentState = 0, futureState = 0, direction = 5,
+    views = 4, moves = 0,
+    left_button = 0, right_button = 0;
+    
+double oldMousex, oldMousey;
 
 VAO *axes, 
-        *cell; 
+        *cell, 
+        *background;
 
 GraphicalObject Block, 
                             Board[20][20];
 
-void renderscore(double x, double y, int score)
+void Background ( ) 
+{   
+    GLfloat vertex_buffer_data [ ] = {
+        6,6,-6,
+        -6,6,-6,
+        -6,-6,-6,
+
+        -6,-6,-6,
+        6,-6,-6,
+        6,6,-6,
+
+        6,-6,-6,
+        -6,-6,-6,
+        -6,-6,6,
+
+        -6,-6,6,
+        6,-6,6,
+        6,-6,-6,
+
+        -6,-6,-6,
+        -6,6,-6,
+        -6,6,6,
+
+        -6,6,6,
+        -6,-6,6,
+        -6,-6,-6,
+
+        6,-6,-6,
+        6,6,-6,
+        6,6,6,
+
+        6,6,6,
+        6,-6,6,
+        6,-6,-6,
+
+        6,6,6,
+        -6,6,6,
+        -6,-6,6,
+
+        -6,-6,6,
+        6,-6,6,
+        6,6,6
+    };
+    GLfloat color_buffer_data [ ] = {
+        0,0,0,
+        0,0,0,
+        0.6,0.6,1,
+
+        0.6,0.6,1,
+        1, 0.6, 0.8,
+        0,0,0,
+
+        1, 0.6, 0.8,
+        0.6,0.6,1,
+        1,1,1,
+
+        1,1,1,
+        1,1,1,
+        1, 0.6, 0.8,
+
+        0.6,0.6,1,
+        0,0,0,
+        1,1,1,
+
+        1,1,1,
+        1,1,1,
+        0.6,0.6,1,
+
+        1, 0.6, 0.8,
+        0,0,0,
+        1,1,1,
+
+        1,1,1,
+        1,1,1,
+        1, 0.6, 0.8,
+
+        1,1,1,
+        1,1,1,
+        1,1,1,
+
+        1,1,1,
+        1,1,1,
+        1,1,1
+
+    };
+    background = create3DObject ( GL_TRIANGLES, 30, vertex_buffer_data, color_buffer_data, GL_FILL );
+}
+
+void renderscore(double x, double y, double z, int score)
 {
-  double x_ordinate = x, y_ordinate = y;
+  double x_ordinate = x, y_ordinate = y, z_ordinate = z;
   glm::mat4 VP = ( perspective? Matrices.projectionP:Matrices.projectionO ) * Matrices.view;
   glm::mat4 MVP;
   glm::mat4 Irotator = glm::rotate(70.0f, glm::vec3(0,1,0));
-  glm::mat4 Itranslator = glm::translate(glm::vec3(0.5f,0,0));
+  glm::mat4 Itranslator = glm::translate(glm::vec3(0.1f,0,0));
+  glm::mat4 translator = glm::translate(glm::vec3(x_ordinate, y_ordinate, z_ordinate));
   if(score == 0){
     Matrices.model = glm::mat4(1.0f);
-    glm::mat4 translator = glm::translate(glm::vec3(x_ordinate, y_ordinate, 0));
     Matrices.model *= translator*Irotator*Itranslator;
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -692,47 +778,55 @@ void keyboard ( GLFWwindow* window, int key, int scancode, int action, int mods 
             break;
 
          case GLFW_KEY_UP:    
-            if ( presentState == 0 )
-                futureState = 1;
-            else if ( presentState == 1 ) 
-                futureState = 0;
-            else
-                futureState = 2;
-            direction = 8;
-            moves++;
+            if ( ! stageStart ) {
+                if ( presentState == 0 )
+                    futureState = 1;
+                else if ( presentState == 1 ) 
+                    futureState = 0;
+                else
+                    futureState = 2;
+                direction = 8;
+                moves++;
+            }
             break;
             
          case GLFW_KEY_DOWN:
-            if ( presentState == 0 )
-                futureState = 1;
-            else if ( presentState == 1 ) 
-                futureState = 0;
-            else if ( presentState == 2 )
-                futureState = 2;
-            direction = 2;
-            moves++;
+            if ( ! stageStart ) {
+                if ( presentState == 0 )
+                    futureState = 1;
+                else if ( presentState == 1 ) 
+                    futureState = 0;
+                else if ( presentState == 2 )
+                    futureState = 2;
+                direction = 2;
+                moves++;
+            }
             break;
                
          case GLFW_KEY_LEFT:
-            if ( presentState == 0 )
-                futureState = 2;
-            else if ( presentState == 1 ) 
-                futureState = 1;
-            else if ( presentState == 2 )
-                futureState = 0;
-            direction = 4;
-            moves++;
+            if ( ! stageStart ) {
+                if ( presentState == 0 )
+                    futureState = 2;
+                else if ( presentState == 1 ) 
+                    futureState = 1;
+                else if ( presentState == 2 )
+                    futureState = 0;
+                direction = 4;
+                moves++;
+            }
             break;
         
          case GLFW_KEY_RIGHT:
-            if ( presentState == 0 )
-                futureState = 2;
-            else if ( presentState == 1 ) 
-                futureState = 1;
-            else if ( presentState == 2 )
-                futureState = 0;
-            direction = 6;
-            moves++;
+            if ( ! stageStart ) {
+                if ( presentState == 0 )
+                    futureState = 2;
+                else if ( presentState == 1 ) 
+                    futureState = 1;
+                else if ( presentState == 2 )
+                    futureState = 0;
+                direction = 6;
+                moves++;
+            }
             break;
     
          case GLFW_KEY_ESCAPE:
@@ -760,13 +854,30 @@ void keyboardChar ( GLFWwindow* window, unsigned int key )
 /* Executed when a mouse button is pressed/released */
 void mouseButton ( GLFWwindow* window, int button, int action, int mods )
 {
-    switch (button) {
-        case GLFW_MOUSE_BUTTON_LEFT:
-            break;
-        case GLFW_MOUSE_BUTTON_RIGHT:
-            break;
-        default:
-            break;
+    if ( action == GLFW_PRESS ) {
+        switch (button) {
+            case GLFW_MOUSE_BUTTON_LEFT:
+                left_button = 1;
+                glfwGetCursorPos ( window, &oldMousex, &oldMousey );
+                break;
+            case GLFW_MOUSE_BUTTON_RIGHT:
+                right_button = 1;
+                break;
+            default:
+                break;
+        }
+    }
+    else {
+        switch (button) {
+            case GLFW_MOUSE_BUTTON_LEFT:
+                left_button = 0;
+                break;
+            case GLFW_MOUSE_BUTTON_RIGHT:
+                right_button = 0;
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -1038,18 +1149,6 @@ void levelup ( )
         bridgeConstruct ( );
 }
 
-void checkStart ( )
-{
-    for ( int i = 0; i < board_size; i++ ) 
-        for ( int j = 0; j < board_size; j++ ) 
-            if ( Board[ i ][ j ].y_ordinate > -5.0f && 
-                board[ i ][ j ] != 0 &&
-                board[ i ][ j ] != 2 )
-                return;
-        
-    stageStart = 1;
-}
-
 void drawBoard ( )
 {
     for ( int i = 0; i < board_size; i++ ) {
@@ -1057,38 +1156,30 @@ void drawBoard ( )
             Board[ i ][ j ].translator ( Board[ i ][ j ].x_ordinate - 1,
                                                         Board[ i ][ j ].y_ordinate,
                                                         Board[ i ][ j ].z_ordinate - 1);   
-            if ( board[ i ][ j ] != 0 && board[ i ][ j ] != 2 && board[ i ][ j ] != 7 )
+            if ( board[ i ][ j ] != 0 && board[ i ][ j ] != 2 && board[ i ][ j ] != 7 && Board[ i ][ j ].y_ordinate > -4.0f)
                 Board[ i ][ j ].render ( );
         }
     }
 }
 
-int stageStarting ( )
-{
-    for ( int i = 0; i < board_size; i++ )
-        for ( int j = 0; j < board_size; j++ )
-            if ( Board[ i ][ j ].y_ordinate < -0.1f && 
-                board[ i ][ j ] != 0 &&
-                board[ i ][ j ] != 2 )
-                    return 1;
-
-    if ( Block.y_ordinate > 0.1 )
-            return 1;
-
-    return 0;
-}
-
 void fallBlocksBoards ( )
 {
+    if ( Block.y_ordinate > -6.0f ) {
+            Block.y_ordinate -= 0.1f;
+            Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1 );   
+            return;
+        }
     for ( int i = 0; i < board_size; i++) {
             for (int j = 0; j < board_size; j++ ) {
                   if ( Board[ i ][ j ].y_ordinate >= -5.0f && 
                         board[ i ][ j ] != 0 &&
                         board[ i ][ j ] != 2 ) {
                         Board[ i ][ j ].y_ordinate -= 1.0f;
+                        return;
                     }
                 }   
             }
+    stageStart = 1;
 }
 
 void buildBlocksBoards ( )
@@ -1103,7 +1194,6 @@ void buildBlocksBoards ( )
             }
         }
     }
-
     stageStart = 0;
 }
 
@@ -1115,10 +1205,10 @@ int checkBlock ( )
     if ( ( i < 0 || j < 0) || 
         ( presentState == 0 && ( board[ i ][ j ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j ] == 3 ) ) ||
         ( presentState == 1 && ( board[ i ][ j ] == 0 || board[ i + 1 ][ j ] == 0 || board[ i + 1 ][ j ] == 7 || board[ i ][ j + 1 ] == 7) ) ||      
-        ( presentState == 2 && ( board[ i ][ j ] == 0 || board[ i ][ j + 1 ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j + 1 ] == 7) ) )
+        ( presentState == 2 && ( board[ i ][ j ] == 0 || board[ i ][ j + 1 ] == 0 || board[ i ][ j ] == 7 || board[ i ][ j + 1 ] == 7) ) ) 
         return 1;
 
-    if ( presentState == 0 && board[ i ][ j ] == 2)
+    if ( presentState == 0 && board[ i ][ j ] == 2) 
         return 2;
 
     if ( ( presentState == 0 && board[ i ][ j ] >  3 ) ||
@@ -1175,7 +1265,6 @@ int checkBlock ( )
     else {
         bridge[ prev_Bridge ] = 0;
     }
-
     return 0;
 }
 
@@ -1185,7 +1274,7 @@ void Viewer ( )
             case 0:
                 //Block
                 perspective = 1;
-                eye = glm::vec3 ( Block.x_ordinate, 1, Block.z_ordinate );
+                eye = glm::vec3 ( Block.x_ordinate - 1, 1, Block.z_ordinate - 1);
                 target = glm::vec3 ( 5 , 0.1, 5 ) ;
                 break;
             case 1:
@@ -1209,7 +1298,7 @@ void Viewer ( )
             case 4:
                 //Tower
                 perspective = 0;
-                eye = glm::vec3 ( 4*cos((float)camera_rotation_angle*M_PI/180.0f), 4,  4*sin((float)camera_rotation_angle*M_PI/180.0f) );
+                eye = glm::vec3 ( 3*cos((float)camera_rotation_angle*M_PI/180.0f), 2,  3*sin((float)camera_rotation_angle*M_PI/180.0f) );
                 target =  glm::vec3 ( 0, 0, 0 );
                 break;
             default:
@@ -1253,7 +1342,15 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
     int fbwidth, fbheight;
     glfwGetFramebufferSize ( window, &fbwidth, &fbheight );
     glViewport ( (int)(x*fbwidth), (int)(y*fbheight), (int)(w*fbwidth), (int)(h*fbheight) );
-
+    double currentMousex;
+    double currentMousey;
+    if ( left_button == 1 ) {
+        glfwGetCursorPos( window, &currentMousex, &currentMousey);
+        camera_rotation_angle = currentMousex - oldMousex;
+    }
+    else {
+        camera_rotation_angle = 70.0f;
+    }
 
     // use the loaded shader program
     // Don't change unless you know what you are doing
@@ -1273,35 +1370,30 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
     //  Don't change unless you are sure!!
     glm::mat4 VP =  ( perspective ? Matrices.projectionP : Matrices.projectionO ) * Matrices.view;
 
-    renderscore ( 3 , 4.8, ( int ) glfwGetTime ( ) );
-    renderscore ( -1, 3, moves );
-    // Send our transformation to the currently bound shader, in the "MVP" uniform
-    // For each model you render, since the MVP will be different (at least the M part)
-    //  Don't change unless you are sure!!
-    glm::mat4 MVP;	// MVP = Projection * View * Model
+    renderscore ( 0, 4, 0, level );
+    renderscore ( 3, 2, 0, ( int ) glfwGetTime ( ) );
+    renderscore ( -3, 1, 0, moves );
+
+    glm::mat4 MVP;	
     
-    /*
     Matrices.model = glm::mat4 (1.0f);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv (Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    draw3DObject (axes);
-    */
+    draw3DObject (background);  
 
-    if ( stageStart && stageStarting ( ) ) 
-    {
+    if ( stageStart ) {
         buildBlocksBoards ( );
     }
 
     drawBoard ( );
 
-    if ( ! stageStart && Block.y_ordinate > 0.1 )
-    {
+    if ( ! stageStart && Block.y_ordinate > 0.1 ) {
          Block.y_ordinate -= 0.1f; 
     }
 
     blockRotator ( );
 
-    // Block.render ( );
+    Block.render ( );
 
     
     switch ( checkBlock ( ) ) {
@@ -1311,28 +1403,15 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
             break;
         
         case 1:
-            fallBlocksBoards ( );            
-            if ( Block.y_ordinate > -5.0f ) {
-                if ( presentState == 0) 
-                    Block.rotator ( theta, glm::vec3 ( 0, 0, 1) );
-                else if ( presentState == 1 )
-                    Block.rotator ( 90.0f + theta, glm::vec3 (0, 1, 1) );
-                else 
-                    Block.rotator ( 90.0f + theta, glm::vec3 ( 1, 1, 0 ) );
-                Block.y_ordinate -= 0.1f;
-                theta += 7.5f;
-                Block.translator ( Block.x_ordinate - 1, Block.y_ordinate, Block.z_ordinate - 1 );
-            }
+            if ( ! stageStart )
+                fallBlocksBoards ( );        
             else 
-                reset ( );
+                reset ( ); 
             break;
         
         case 2:
-            fallBlocksBoards ( ); 
-             if ( Block.y_ordinate > -5.0f ) {
-                Block.y_ordinate -= 0.1f;
-                Block.translator ( Block.x_ordinate, Block.y_ordinate, Block.z_ordinate );
-            }
+            if ( ! stageStart )
+                fallBlocksBoards ( ); 
             else { 
                 reset ( );
                 levelup ( );
@@ -1342,14 +1421,13 @@ void draw ( GLFWwindow* window, float x, float y, float w, float h )
         default :
             break;   
     }
-    checkStart ( );
-
-    // camera_rotation_angle+=0.5;
 }
 
 // Initialise glfw window, I/O callbacks and the renderer to use 
-GLFWwindow* initGLFW ( int width, int height ){
-    GLFWwindow* window;        // window desciptor/handle
+GLFWwindow* initGLFW ( int width, int height )
+{
+    GLFWwindow* window;        
+    // window desciptor/handle
     const char *Game = "Bloxorz";
     glfwSetErrorCallback ( error_callback );
     if ( ! glfwInit ( ) ) {
@@ -1369,15 +1447,19 @@ GLFWwindow* initGLFW ( int width, int height ){
    }
 
    glfwMakeContextCurrent ( window );
-    //    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
    glfwSwapInterval ( 1 );
    glfwSetFramebufferSizeCallback ( window, reshapeWindow );
    glfwSetWindowSizeCallback ( window, reshapeWindow );
    glfwSetWindowCloseCallback (window, quit );
    glfwSetWindowTitle(window, Game);
-    glfwSetKeyCallback ( window, keyboard );      // general keyboard input
-    glfwSetCharCallback(window, keyboardChar);  // simpler specific character handling
-    glfwSetMouseButtonCallback ( window, mouseButton );  // mouse button clicks
+    glfwSetKeyCallback ( window, keyboard );
+    // general keyboard input
+    glfwSetCharCallback(window, keyboardChar);  
+    // simpler specific character handling
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetMouseButtonCallback(window, mouseButton);
+     // mouse button clicks
+    // glfwSetScrollCallback(window, mouseScroll);
 
     return window;
 }
@@ -1388,6 +1470,8 @@ void initGL ( GLFWwindow* window, int width, int height )
 {
     // Objects should be created before any other gl function and shaders 
     // Create the models
+
+    Background ( );
     drawAxes ( );
 
     // BLOCK
@@ -1465,32 +1549,17 @@ int main ( int argc, char** argv )
 
     double last_update_time = glfwGetTime ( ), current_time;
 
-    /* Draw in loop */
     while ( ! glfwWindowShouldClose ( window ) ) {
-
-	// clear the color and depth in the frame buffer
+        // clear the color and depth in the frame buffer
        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
         // OpenGL Draw commands
        draw ( window, 0, 0, 1, 1 );
-	// proj_type ^= 1;
-	// draw(window, 0.5, 0, 0.5, 1);
-	// proj_type ^= 1;
 
-        // Swap Frame Buffer in double buffering
        glfwSwapBuffers ( window );
 
         // Poll for Keyboard and mouse events
        glfwPollEvents ( );
-
-        // Control based on time (Time based transformation like 5 degrees rotation every 0.5s)
-        current_time = glfwGetTime ( ); // Time in seconds
-        if ( (current_time - last_update_time) >= 0.5 ) { // atleast 0.5s elapsed since last frame
-            // do something every 0.5 seconds ..
-            last_update_time = current_time;
-        }
     }
-
     glfwTerminate ( );
-    //    exit(EXIT_SUCCESS);
 }
